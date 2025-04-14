@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Node, Link } from '@/types/graph-types'
+import { WebGLTreeRenderer } from '@/utils/renderer/WebGLTreeRenderer'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,6 +14,7 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 const minimapRef = ref<HTMLCanvasElement | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const minimapCtx = ref<CanvasRenderingContext2D | null>(null)
+const renderer = ref<WebGLTreeRenderer | null>(null)
 
 const treeData = ref<{ nodes: Node[]; links: Link[] }>({ nodes: [], links: [] })
 const treeDataRaw = ref<{ nodes: Node[]; links: Link[] }>({ nodes: [], links: [] })
@@ -120,7 +122,7 @@ const fetchTreeData = async () => {
             const links: Link[] = []
             const names = ['김','이','박','정','최','강','윤','한','송','임','신','권','황','안','양','배','조','유','서','홍']
 
-            for (let i = 1; i <= Math.pow(2, 9) - 1; i++) {
+            for (let i = 1; i <= Math.pow(2, 15) - 1; i++) {
                 const randomName = names[Math.floor(Math.random() * names.length)] + Math.random().toString(36).substring(2, 5)
                 const randomSalesLevel = Math.floor(Math.random() * 11)
                 nodes.push({
@@ -161,6 +163,12 @@ const updateLayoutBasedOnZoom = () => {
             const { nodes, links } = event.data
             treeData.value.nodes = nodes
             treeData.value.links = links
+
+            if (renderer.value) {
+                renderer.value.updateNodes(nodes)
+                renderer.value.updateLinks(links, nodes)
+            }
+
             isLoading.value = false
 
             const container = canvasRef.value?.parentElement
@@ -206,69 +214,16 @@ const getNodeColor = (node: Node): string => {
 }
 
 const draw = () => {
-    if (!canvasRef.value || !ctx.value) return
-    const canvas = canvasRef.value
-    ctx.value.clearRect(0, 0, canvas.width, canvas.height)
+    if (!canvasRef.value || !renderer.value) return
 
-    ctx.value.save()
-    ctx.value.translate(offsetX.value, offsetY.value)
-    ctx.value.scale(scale.value, scale.value)
+    const transform = new DOMMatrix()
+        .translateSelf(offsetX.value, offsetY.value)
+        .scaleSelf(scale.value, scale.value)
 
-    const inverseScale = 1 / scale.value
-    const visibleXMin = -offsetX.value * inverseScale
-    const visibleYMin = -offsetY.value * inverseScale
-    const visibleXMax = visibleXMin + canvas.width * inverseScale
-    const visibleYMax = visibleYMin + canvas.height * inverseScale
-
-    ctx.value.beginPath()
-    ctx.value.strokeStyle = '#999'
-    ctx.value.lineWidth = 1.5
-
-    treeData.value.links.forEach(link => {
-        const source = treeData.value.nodes.find(n => n.id === link.source)
-        const target = treeData.value.nodes.find(n => n.id === link.target)
-
-        if (
-            !source || !target ||
-            typeof source.x !== 'number' || typeof source.y !== 'number' ||
-            typeof target.x !== 'number' || typeof target.y !== 'number'
-        ) return
-
-        if (
-            (source.x < visibleXMin && target.x < visibleXMin) ||
-            (source.x > visibleXMax && target.x > visibleXMax) ||
-            (source.y < visibleYMin && target.y < visibleYMin) ||
-            (source.y > visibleYMax && target.y > visibleYMax)
-        ) return
-
-        ctx.value!.moveTo(source.x, source.y)
-        ctx.value!.lineTo(target.x, target.y)
+    renderer.value.render(transform, {
+        width: canvasRef.value.width,
+        height: canvasRef.value.height
     })
-    ctx.value.stroke()
-
-    treeData.value.nodes.forEach(node => {
-        if (
-            node.x < visibleXMin ||
-            node.x > visibleXMax ||
-            node.y < visibleYMin ||
-            node.y > visibleYMax
-        ) return
-
-        ctx.value!.beginPath()
-        ctx.value!.arc(node.x, node.y, node.radius, 0, Math.PI * 2)
-        ctx.value!.fillStyle = getNodeColor(node)
-        ctx.value!.fill()
-        ctx.value!.strokeStyle = '#fff'
-        ctx.value!.lineWidth = 1.5
-        ctx.value!.stroke()
-
-        ctx.value!.fillStyle = '#333'
-        ctx.value!.font = `${node.radius * 0.6}px Arial`
-        ctx.value!.textAlign = 'center'
-        ctx.value!.fillText(node.name, node.x, node.y + node.radius + 10)
-    })
-
-    ctx.value.restore()
 
     drawMinimap()
 }
@@ -312,14 +267,13 @@ const handleWheel = (e: WheelEvent) => {
 }
 
 const handleResize = () => {
-    if (canvasRef.value && ctx.value) {
+    if (canvasRef.value) {
         const container = canvasRef.value.parentElement!
         const dpr = window.devicePixelRatio || 1
         canvasRef.value.width = container.clientWidth * dpr
         canvasRef.value.height = container.clientHeight * dpr
         canvasRef.value.style.width = `${container.clientWidth}px`
         canvasRef.value.style.height = `${container.clientHeight}px`
-        ctx.value.scale(dpr, dpr)
         draw()
     }
 }
@@ -368,7 +322,7 @@ const handleMinimapClick = (e: MouseEvent) => {
 onMounted(async () => {
     await nextTick()
     if (canvasRef.value) {
-        ctx.value = canvasRef.value.getContext('2d')
+        renderer.value = new WebGLTreeRenderer(canvasRef.value)
         handleResize()
 
         canvasRef.value.addEventListener('mousedown', handleMouseDown)
