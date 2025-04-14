@@ -2,11 +2,12 @@ import { hierarchy, cluster } from 'd3-hierarchy'
 import { Node, Link } from '@/types/graph-types'
 
 self.onmessage = (event) => {
-    const { nodes, links, width, height } = event.data as {
+    const { nodes, links, width, height, maxDepth = Infinity } = event.data as {
         nodes: Node[]
         links: Link[]
         width: number
         height: number
+        maxDepth?: number
     }
     
     const nodeMap = new Map<string, Node>()
@@ -28,20 +29,32 @@ self.onmessage = (event) => {
         self.postMessage([])
         return
     }
-    
     const rootNode = nodeMap.get(rootId)
     if (!rootNode) {
-        self.postMessage([])
+        self.postMessage({ nodes: [], links: [] })
         return
     }
     
-    nodes.forEach(n => {
-        n.children = childrenMap.get(n.id)
-    })
+    const visibleNodeSet = new Set<string>()
+    
+    function assignChildren(node: Node, depth: number) {
+        visibleNodeSet.add(node.id)
+        if (depth >= maxDepth) {
+            node.children = undefined
+            return
+        }
+        const children = childrenMap.get(node.id)
+        if (children) {
+            node.children = children
+            children.forEach(child => assignChildren(child, depth + 1))
+        } else {
+            node.children = undefined
+        }
+    }
+    assignChildren(rootNode, 0)
     
     const root = hierarchy<Node>(rootNode)
     
-    // cluster layout 적용
     const xSpacing = 120
     const ySpacing = 150
     const layout = cluster<Node>().nodeSize([xSpacing, ySpacing])
@@ -56,5 +69,7 @@ self.onmessage = (event) => {
         positionedNodes.push(d)
     })
     
-    self.postMessage(positionedNodes)
+    const positionedLinks: Link[] = links.filter(l => visibleNodeSet.has(l.source) && visibleNodeSet.has(l.target))
+    
+    self.postMessage({ nodes: positionedNodes, links: positionedLinks })
 }
