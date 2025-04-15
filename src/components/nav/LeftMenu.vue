@@ -1,10 +1,12 @@
 <script lang='ts' setup>
 import {onMounted, onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
+import {useAuthStore} from "@/store/auth/auth";
 
 const router = useRouter()
 const isOpen = ref(false)
 const isMobile = ref(false)
+const authStore = useAuthStore()
 
 const menuItems = [
     {path: '/', label: '대시보드'},
@@ -22,11 +24,7 @@ const toggleMenu = () => {
 
 const handleResize = () => {
     isMobile.value = window.innerWidth < 768
-    if (!isMobile.value) {
-        isOpen.value = true
-    } else {
-        isOpen.value = false
-    }
+    isOpen.value = !isMobile.value;
 }
 
 const navigate = (path: string) => {
@@ -37,7 +35,9 @@ const navigate = (path: string) => {
 }
 
 const logout = async () => {
-    
+    // TODO 리프레시 토큰 제거 API
+    authStore.clearAuth()
+    await router.push('/signin')
 }
 
 onMounted(() => {
