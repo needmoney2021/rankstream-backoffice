@@ -1,14 +1,14 @@
 export interface Member {
-    id: string
-    name: string
-    gender: 'M' | 'F'
+    readonly id: string
+    readonly name: string
+    readonly gender: 'M' | 'F'
     status: 'ACTIVE' | 'INACTIVE' | 'WITHDRAW'
-    joinDate: string
-    withdrawDate?: string
-    childrenCount: number
+    readonly joinDate: string
+    readonly withdrawDate?: string
+    readonly childrenCount: number
     currentGrade: string
-    sponsorId?: string
-    recommenderId?: string
+    readonly sponsorId?: string
+    readonly recommenderId?: string
     position?: 'Left' | 'Right'
 }
 
@@ -16,4 +16,4 @@ export interface MemberSearchParams {
     memberId?: string
     name?: string
     gender?: string
-} 
+}

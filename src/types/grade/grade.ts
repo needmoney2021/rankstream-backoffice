@@ -1,10 +1,10 @@
 export interface Grade {
-    id: number
+    readonly id: number
     name: string
     achievementPoint: number
     refundRate: number
-    createdBy: string
-    createdAt: string
-    updatedBy?: string
-    updatedAt?: string
-} 
+    readonly createdBy: string
+    readonly createdAt: string
+    readonly updatedBy?: string
+    readonly updatedAt?: string
+}

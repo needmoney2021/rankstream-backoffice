@@ -1,5 +1,5 @@
 import { hierarchy, cluster } from 'd3-hierarchy'
-import { Node, Link } from '@/types/graph-types'
+import { Node, Link } from '@/types/tree/graph-types'
 
 self.onmessage = (event) => {
     const { nodes, links, width, height, maxDepth = Infinity } = event.data as {

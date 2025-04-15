@@ -9,7 +9,7 @@ export function useSecureFetch() {
 
     const getCsrfToken = async (): Promise<string> => {
         try {
-            const response = await fetch('/api/csrf-token', {
+            const response = await fetch('/csrf', {
                 credentials: 'include'
             })
             
@@ -32,14 +32,12 @@ export function useSecureFetch() {
         }
         
         try {
-            const response = await fetch('/api/refresh-token', {
-                method: 'POST',
+            const response = await fetch('/refresh-token', {
+                method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    refreshToken: authStore.refreshToken
-                })
+                    'Content-Type': 'application/json',
+                    'Refresh-Token': authStore.refreshToken,
+                }
             })
             
             if (!response.ok) {

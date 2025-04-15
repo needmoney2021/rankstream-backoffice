@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { Node, Link } from '@/types/graph-types'
+import type { Node, Link } from '@/types/tree/graph-types'
 
 const route = useRoute()
 const router = useRouter()
