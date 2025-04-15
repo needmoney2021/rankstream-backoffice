@@ -1,7 +1,7 @@
-<script setup lang='ts'>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Member } from '@/types/member/member'
+<script lang='ts' setup>
+import {onMounted, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {Member} from '@/types/member/member'
 import ModalConfirm from '@/components/modal/ModalConfirm.vue'
 
 interface MockMember {
@@ -32,18 +32,18 @@ const currentGrade = ref('')
 
 // Status options
 const statusOptions = [
-    { value: 'ACTIVE', label: '활성' },
-    { value: 'INACTIVE', label: '비활성' },
-    { value: 'WITHDRAW', label: '탈퇴' }
+    {value: 'ACTIVE', label: '활성'},
+    {value: 'INACTIVE', label: '비활성'},
+    {value: 'WITHDRAW', label: '탈퇴'}
 ]
 
 // Grade options
 const gradeOptions = [
-    { value: '브론즈', label: '브론즈' },
-    { value: '실버', label: '실버' },
-    { value: '골드', label: '골드' },
-    { value: '플래티넘', label: '플래티넘' },
-    { value: '다이아몬드', label: '다이아몬드' }
+    {value: '브론즈', label: '브론즈'},
+    {value: '실버', label: '실버'},
+    {value: '골드', label: '골드'},
+    {value: '플래티넘', label: '플래티넘'},
+    {value: '다이아몬드', label: '다이아몬드'}
 ]
 
 // Fetch member details
@@ -60,7 +60,7 @@ const fetchMemberDetails = async () => {
         // For mock purposes, we'll use static data
         setTimeout(() => {
             // Simulate API response
-            const mockMembers: { [key: string]: MockMember} = {
+            const mockMembers: { [key: string]: MockMember } = {
                 'member000001': {
                     id: 'member000001',
                     name: '김철수',
@@ -210,14 +210,14 @@ onMounted(() => {
             <h1 class="text-2xl font-bold">회원 상세 정보</h1>
             <div class="space-x-2">
                 <button
-                    @click="viewMemberTree"
                     class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    @click="viewMemberTree"
                 >
                     트리보기
                 </button>
                 <button
-                    @click="goBack"
                     class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                    @click="goBack"
                 >
                     목록으로
                 </button>
@@ -231,7 +231,7 @@ onMounted(() => {
 
         <div v-else-if="error" class="bg-red-100 p-4 rounded text-red-700 mb-4">
             {{ error }}
-            <button @click="fetchMemberDetails" class="ml-2 underline">다시 시도</button>
+            <button class="ml-2 underline" @click="fetchMemberDetails">다시 시도</button>
         </div>
 
         <div v-else class="bg-white p-6 rounded-lg shadow">
@@ -241,50 +241,50 @@ onMounted(() => {
                     <div>
                         <label class="block text-sm font-medium text-gray-700">회원 아이디</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.id"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">이름</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.name"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">성별</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.gender === 'M' ? '남성' : '여성'"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">가입일</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.joinDate"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">하위 회원 수</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.childrenCount"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
                 </div>
@@ -292,7 +292,7 @@ onMounted(() => {
                 <div class="space-y-4">
                     <!-- Editable fields -->
                     <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700">상태</label>
+                        <label class="block text-sm font-medium text-gray-700" for="status">상태</label>
                         <select
                             id="status"
                             v-model="status"
@@ -305,7 +305,7 @@ onMounted(() => {
                     </div>
 
                     <div>
-                        <label for="currentGrade" class="block text-sm font-medium text-gray-700">현재 등급</label>
+                        <label class="block text-sm font-medium text-gray-700" for="currentGrade">현재 등급</label>
                         <select
                             id="currentGrade"
                             v-model="currentGrade"
@@ -320,30 +320,30 @@ onMounted(() => {
                     <div>
                         <label class="block text-sm font-medium text-gray-700">탈퇴일</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.withdrawDate || '-'"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">추천인 아이디</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.recommenderId || '-'"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">상위 스폰서 아이디</label>
                         <input
-                            type="text"
-                            readonly
                             :value="member.sponsorId || '-'"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
                         />
                     </div>
                 </div>
@@ -351,8 +351,8 @@ onMounted(() => {
 
             <div class="mt-6">
                 <button
-                    @click="openConfirmModal"
                     class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    @click="openConfirmModal"
                 >
                     수정
                 </button>

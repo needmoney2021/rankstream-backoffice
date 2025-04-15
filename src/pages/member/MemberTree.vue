@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, nextTick } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import type { Node, Link } from '@/types/tree/graph-types'
+import {nextTick, onMounted, onUnmounted, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import type {Link, Node} from '@/types/tree/graph-types'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,8 +14,8 @@ const minimapRef = ref<HTMLCanvasElement | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const minimapCtx = ref<CanvasRenderingContext2D | null>(null)
 
-const treeData = ref<{ nodes: Node[]; links: Link[] }>({ nodes: [], links: [] })
-const treeDataRaw = ref<{ nodes: Node[]; links: Link[] }>({ nodes: [], links: [] })
+const treeData = ref<{ nodes: Node[]; links: Link[] }>({nodes: [], links: []})
+const treeDataRaw = ref<{ nodes: Node[]; links: Link[] }>({nodes: [], links: []})
 
 const scale = ref(1)
 const offsetX = ref(0)
@@ -118,7 +118,7 @@ const fetchTreeData = async () => {
         if (memberId === 'member000001') {
             const nodes: Node[] = []
             const links: Link[] = []
-            const names = ['김','이','박','정','최','강','윤','한','송','임','신','권','황','안','양','배','조','유','서','홍']
+            const names = ['김', '이', '박', '정', '최', '강', '윤', '한', '송', '임', '신', '권', '황', '안', '양', '배', '조', '유', '서', '홍']
 
             for (let i = 1; i <= Math.pow(2, 9) - 1; i++) {
                 const randomName = names[Math.floor(Math.random() * names.length)] + Math.random().toString(36).substring(2, 5)
@@ -142,7 +142,7 @@ const fetchTreeData = async () => {
                 }
             }
 
-            treeDataRaw.value = { nodes, links }
+            treeDataRaw.value = {nodes, links}
 
             scale.value = getInitialScale(nodes.length)
             offsetX.value = 0
@@ -155,10 +155,10 @@ const fetchTreeData = async () => {
 
 const updateLayoutBasedOnZoom = () => {
     if (!layoutWorker) {
-        layoutWorker = new Worker(new URL('@/utils/worker/layout-worker.ts', import.meta.url), { type: 'module' })
+        layoutWorker = new Worker(new URL('@/utils/worker/layout-worker.ts', import.meta.url), {type: 'module'})
 
         layoutWorker.onmessage = (event: MessageEvent) => {
-            const { nodes, links } = event.data
+            const {nodes, links} = event.data
             treeData.value.nodes = nodes
             treeData.value.links = links
             isLoading.value = false
@@ -191,7 +191,7 @@ const updateLayoutBasedOnZoom = () => {
 
     layoutWorker.postMessage({
         nodes: safeNodes,
-        links: treeDataRaw.value.links.map(l => ({ source: l.source, target: l.target })),
+        links: treeDataRaw.value.links.map(l => ({source: l.source, target: l.target})),
         width,
         height,
         maxDepth: visibleDepth
@@ -435,22 +435,21 @@ const focusOnNode = (node: Node) => {
 </script>
 
 
-
 <template>
     <div class="p-6">
         <div class="mb-4 flex items-center gap-2">
             <input
                 v-model="searchQuery"
-                @keydown.enter="handleSearch"
-                placeholder="회원 이름 또는 ID 검색"
                 class="border rounded px-3 py-1 w-60"
+                placeholder="회원 이름 또는 ID 검색"
+                @keydown.enter="handleSearch"
             />
-            <button @click="handleSearch" class="px-3 py-1 bg-blue-600 text-white rounded">검색</button>
+            <button class="px-3 py-1 bg-blue-600 text-white rounded" @click="handleSearch">검색</button>
         </div>
 
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold">회원 트리</h1>
-            <button @click="goBack" class="bg-gray-600 text-white rounded px-4 py-2 hover:bg-gray-700">
+            <button class="bg-gray-600 text-white rounded px-4 py-2 hover:bg-gray-700" @click="goBack">
                 회원 상세로
             </button>
         </div>
@@ -459,7 +458,7 @@ const focusOnNode = (node: Node) => {
             <p class="mb-1">여러 결과가 있습니다. 선택하세요:</p>
             <ul class="space-y-1">
                 <li v-for="node in searchResults" :key="node.id">
-                    <button @click="focusOnNode(node)" class="text-blue-700 hover:underline">
+                    <button class="text-blue-700 hover:underline" @click="focusOnNode(node)">
                         {{ node.name }} ({{ node.id }})
                     </button>
                 </li>
@@ -468,7 +467,8 @@ const focusOnNode = (node: Node) => {
 
         <div class="relative border rounded-lg overflow-hidden w-full" style="height: 600px;">
             <canvas ref="canvasRef" class="w-full h-full"></canvas>
-            <canvas ref="minimapRef" class="absolute bottom-4 right-4 border bg-white shadow rounded" width="200" height="150"></canvas>
+            <canvas ref="minimapRef" class="absolute bottom-4 right-4 border bg-white shadow rounded" height="150"
+                    width="200"></canvas>
         </div>
     </div>
 </template>

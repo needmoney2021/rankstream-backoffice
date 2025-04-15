@@ -13,7 +13,7 @@ export function useExcelParser() {
                     }
                     
                     const data = e.target.result
-                    const workbook = XLSX.read(data, { type: 'array' })
+                    const workbook = XLSX.read(data, {type: 'array'})
                     const firstSheetName = workbook.SheetNames[0]
                     const worksheet = workbook.Sheets[firstSheetName]
                     
@@ -33,8 +33,8 @@ export function useExcelParser() {
             reader.readAsArrayBuffer(file)
         })
     }
-
+    
     return {
         parseExcelFile
     }
-} 
+}

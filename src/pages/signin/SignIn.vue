@@ -1,7 +1,7 @@
-<script setup lang='ts'>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/store/auth/auth'
+<script lang='ts' setup>
+import {ref} from 'vue'
+import {useRouter} from 'vue-router'
+import {useAuthStore} from '@/store/auth/auth'
 
 const email = ref('')
 const password = ref('')
@@ -23,7 +23,7 @@ const handleLogin = async () => {
 
         // In a real implementation, this would call an API
         console.debug('Attempting login with:', email.value)
-        
+
         // Mock login for now - to be implemented by a human
         setTimeout(() => {
             // Simulate successful login
@@ -33,7 +33,7 @@ const handleLogin = async () => {
                 accessToken: 'mock-token-' + Math.random(),
                 refreshToken: 'mock-refresh-token-' + Math.random()
             })
-            
+
             router.push('/dashboard')
             isLoading.value = false
         }, 1000)
@@ -59,29 +59,29 @@ const handleLogin = async () => {
             <form class="mt-8 space-y-6" @submit.prevent="handleLogin">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
-                        <label for="email-address" class="sr-only">이메일</label>
+                        <label class="sr-only" for="email-address">이메일</label>
                         <input
                             id="email-address"
                             v-model="email"
-                            name="email"
-                            type="email"
                             autocomplete="email"
-                            required
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                            name="email"
                             placeholder="이메일"
+                            required
+                            type="email"
                         />
                     </div>
                     <div>
-                        <label for="password" class="sr-only">비밀번호</label>
+                        <label class="sr-only" for="password">비밀번호</label>
                         <input
                             id="password"
                             v-model="password"
-                            name="password"
-                            type="password"
                             autocomplete="current-password"
-                            required
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                            name="password"
                             placeholder="비밀번호"
+                            required
+                            type="password"
                         />
                     </div>
                 </div>
@@ -92,15 +92,18 @@ const handleLogin = async () => {
 
                 <div>
                     <button
-                        type="submit"
                         :disabled="isLoading"
                         class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        type="submit"
                     >
                         <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
                             <!-- Loading spinner -->
-                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                      fill="currentColor"></path>
                             </svg>
                         </span>
                         로그인
@@ -112,4 +115,4 @@ const handleLogin = async () => {
 </template>
 
 <style scoped>
-</style> 
+</style>

@@ -1,12 +1,12 @@
-import { useAuthStore } from '@/store/auth/auth'
-import { useFetchStore } from '@/store/fetch/fetch'
+import {useAuthStore} from '@/store/auth/auth'
+import {useFetchStore} from '@/store/fetch/fetch'
 
 export function useSecureFetch() {
     const authStore = useAuthStore()
     const fetchStore = useFetchStore()
-
+    
     let csrfToken: string
-
+    
     const getCsrfToken = async (): Promise<string> => {
         try {
             const response = await fetch('/csrf', {
@@ -25,7 +25,7 @@ export function useSecureFetch() {
             throw error
         }
     }
-
+    
     const refreshToken = async (): Promise<string> => {
         if (!authStore.refreshToken) {
             throw new Error('No refresh token available')
@@ -59,7 +59,7 @@ export function useSecureFetch() {
             throw error
         }
     }
-
+    
     const secureRequest = async (url: string, options: RequestInit = {}): Promise<Response> => {
         // Update fetching state
         fetchStore.setFetching(true)

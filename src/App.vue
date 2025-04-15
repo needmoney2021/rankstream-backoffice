@@ -1,18 +1,18 @@
-<script setup lang='ts'>
-import { RouterView } from 'vue-router'
+<script lang='ts' setup>
+import {RouterView} from 'vue-router'
 import LeftMenu from '@/components/nav/LeftMenu.vue'
 </script>
 
 <template>
     <div class="min-h-screen bg-gray-100">
-        <LeftMenu />
-        
+        <LeftMenu/>
+
         <!-- Main Content -->
         <main class="md:ml-64 transition-all duration-300">
-            <RouterView />
+            <RouterView/>
         </main>
     </div>
 </template>
 
 <style scoped>
-</style> 
+</style>

@@ -1,8 +1,8 @@
-import { hierarchy, cluster } from 'd3-hierarchy'
-import { Node, Link } from '@/types/tree/graph-types'
+import {cluster, hierarchy} from 'd3-hierarchy'
+import {Link, Node} from '@/types/tree/graph-types'
 
 self.onmessage = (event) => {
-    const { nodes, links, width, height, maxDepth = Infinity } = event.data as {
+    const {nodes, links, width, height, maxDepth = Infinity} = event.data as {
         nodes: Node[]
         links: Link[]
         width: number
@@ -31,7 +31,7 @@ self.onmessage = (event) => {
     }
     const rootNode = nodeMap.get(rootId)
     if (!rootNode) {
-        self.postMessage({ nodes: [], links: [] })
+        self.postMessage({nodes: [], links: []})
         return
     }
     
@@ -51,6 +51,7 @@ self.onmessage = (event) => {
             node.children = undefined
         }
     }
+    
     assignChildren(rootNode, 0)
     
     const root = hierarchy<Node>(rootNode)
@@ -71,5 +72,5 @@ self.onmessage = (event) => {
     
     const positionedLinks: Link[] = links.filter(l => visibleNodeSet.has(l.source) && visibleNodeSet.has(l.target))
     
-    self.postMessage({ nodes: positionedNodes, links: positionedLinks })
+    self.postMessage({nodes: positionedNodes, links: positionedLinks})
 }

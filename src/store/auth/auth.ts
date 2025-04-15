@@ -1,12 +1,12 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import {defineStore} from 'pinia'
+import {ref} from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
     const userId = ref<string | null>(null)
     const companyId = ref<number | null>(null)
     const accessToken = ref<string | null>(null)
     const refreshToken = ref<string | null>(null)
-
+    
     function setAuth(auth: { userId: string, companyId: number, accessToken: string, refreshToken: string }) {
         userId.value = auth.userId
         companyId.value = auth.companyId
@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
             refreshToken: auth.refreshToken
         }))
     }
-
+    
     function clearAuth() {
         userId.value = null
         companyId.value = null
@@ -31,11 +31,11 @@ export const useAuthStore = defineStore('auth', () => {
         // Remove from localStorage
         localStorage.removeItem('auth')
     }
-
+    
     function isAuthenticated() {
         return !!accessToken.value
     }
-
+    
     // Initialize from localStorage if available
     const storedAuth = localStorage.getItem('auth')
     if (storedAuth) {
@@ -50,7 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
             clearAuth()
         }
     }
-
+    
     return {
         userId,
         companyId,
@@ -60,4 +60,4 @@ export const useAuthStore = defineStore('auth', () => {
         clearAuth,
         isAuthenticated
     }
-}) 
+})

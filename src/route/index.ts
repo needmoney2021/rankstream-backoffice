@@ -1,29 +1,29 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { authGuard } from './guards/auth-guard'
+import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router'
+import {authGuard} from './guards/auth-guard'
 
 const routes: Array<RouteRecordRaw> = [
     {
         path: '/',
         redirect: '/dashboard',
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/signin',
         name: 'SignIn',
         component: () => import('../pages/signin/SignIn.vue'),
-        meta: { requiresAuth: false }
+        meta: {requiresAuth: false}
     },
     {
         path: '/dashboard',
         name: 'Dashboard',
         component: () => import('../pages/dashboard/Dashboard.vue'),
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/sponsorship',
         name: 'SponsorShip',
         component: () => import('../pages/sponsorship/SponsorShip.vue'),
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/grade',
@@ -44,7 +44,7 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../pages/grade/GradeRegister.vue')
             }
         ],
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/member',
@@ -70,7 +70,7 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../pages/member/MemberTree.vue')
             }
         ],
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/order',
@@ -86,7 +86,7 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../pages/order/OrderSnapshot.vue')
             }
         ],
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/schedule',
@@ -102,7 +102,7 @@ const routes: Array<RouteRecordRaw> = [
                 component: () => import('../pages/schedule/ScheduleRegister.vue')
             }
         ],
-        meta: { requiresAuth: true }
+        meta: {requiresAuth: true}
     },
     {
         path: '/:pathMatch(.*)*',
@@ -117,4 +117,4 @@ const router = createRouter({
 
 router.beforeEach(authGuard)
 
-export default router 
+export default router

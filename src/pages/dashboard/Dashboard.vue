@@ -1,31 +1,31 @@
-<script setup lang='ts'>
-import { ref, onMounted } from 'vue'
-import { Chart, registerables } from 'chart.js'
+<script lang='ts' setup>
+import {onMounted, ref} from 'vue'
+import {Chart, registerables} from 'chart.js'
 
 // Register Chart.js components
 Chart.register(...registerables)
 
 // Example data for member statistics
 const memberChartData = ref({
-    labels: Array.from({ length: 30 }, (_, i) => `${i + 1}일`),
+    labels: Array.from({length: 30}, (_, i) => `${i + 1}일`),
     datasets: [
         {
             label: '전체',
-            data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 100 + 200)),
+            data: Array.from({length: 30}, () => Math.floor(Math.random() * 100 + 200)),
             borderColor: 'rgb(59, 130, 246)',
             backgroundColor: 'rgba(59, 130, 246, 0.1)',
             tension: 0.4,
         },
         {
             label: '남성',
-            data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 60 + 100)),
+            data: Array.from({length: 30}, () => Math.floor(Math.random() * 60 + 100)),
             borderColor: 'rgb(16, 185, 129)',
             backgroundColor: 'rgba(16, 185, 129, 0.1)',
             tension: 0.4,
         },
         {
             label: '여성',
-            data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 50 + 80)),
+            data: Array.from({length: 30}, () => Math.floor(Math.random() * 50 + 80)),
             borderColor: 'rgb(249, 115, 22)',
             backgroundColor: 'rgba(249, 115, 22, 0.1)',
             tension: 0.4,
@@ -59,7 +59,7 @@ onMounted(() => {
                 plugins: {
                     legend: {
                         position: 'top',
-                        onClick: function(e, legendItem, legend) {
+                        onClick: function (e, legendItem, legend) {
                             const index = legendItem.datasetIndex
                             const ci = legend.chart
                             if (ci.isDatasetVisible(index)) {
@@ -120,7 +120,7 @@ onMounted(() => {
                             text: '실적 금액(원)'
                         },
                         ticks: {
-                            callback: function(value) {
+                            callback: function (value) {
                                 return value.toLocaleString() + '원'
                             }
                         }
@@ -146,7 +146,7 @@ onMounted(() => {
             <div class="bg-white p-4 rounded-lg shadow">
                 <canvas id="memberChart"></canvas>
             </div>
-            
+
             <!-- Order Performance Chart -->
             <div class="bg-white p-4 rounded-lg shadow">
                 <canvas id="orderChart"></canvas>
@@ -156,4 +156,4 @@ onMounted(() => {
 </template>
 
 <style scoped>
-</style> 
+</style>

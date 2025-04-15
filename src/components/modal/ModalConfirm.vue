@@ -1,4 +1,4 @@
-<script setup lang='ts'>
+<script lang='ts' setup>
 defineProps<{
     message: string
 }>()
@@ -21,15 +21,15 @@ const cancelAction = () => {
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <div class="mb-4 text-lg">{{ message }}</div>
             <div class="flex justify-end space-x-2">
-                <button 
-                    @click="confirmAction"
+                <button
                     class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    @click="confirmAction"
                 >
                     확인
                 </button>
-                <button 
-                    @click="cancelAction"
+                <button
                     class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                    @click="cancelAction"
                 >
                     닫기
                 </button>
@@ -39,4 +39,4 @@ const cancelAction = () => {
 </template>
 
 <style scoped>
-</style> 
+</style>
