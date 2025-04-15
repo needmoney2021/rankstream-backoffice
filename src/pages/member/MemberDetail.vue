@@ -4,16 +4,30 @@ import { useRoute, useRouter } from 'vue-router'
 import { Member } from '@/types/member/member'
 import ModalConfirm from '@/components/modal/ModalConfirm.vue'
 
+interface MockMember {
+    id: string
+    name: string
+    gender: 'M' | 'F'
+    status: 'ACTIVE' | 'INACTIVE' | 'WITHDRAW'
+    joinDate: string
+    withdrawDate?: string
+    childrenCount: number
+    currentGrade: string
+    sponsorId?: string
+    recommenderId?: string
+    position?: 'Left' | 'Right'
+}
+
 const route = useRoute()
 const router = useRouter()
 const memberId = route.params.id as string
-const member = ref<Member>({} as Member)
+const member = ref<MockMember>({} as Member)
 const isLoading = ref(true)
 const error = ref('')
 const showConfirmModal = ref(false)
 
 // Form fields
-const status = ref('')
+const status = ref<'ACTIVE' | 'INACTIVE' | 'WITHDRAW'>()
 const currentGrade = ref('')
 
 // Status options
@@ -46,7 +60,7 @@ const fetchMemberDetails = async () => {
         // For mock purposes, we'll use static data
         setTimeout(() => {
             // Simulate API response
-            const mockMembers = {
+            const mockMembers: { [key: string]: MockMember} = {
                 'member000001': {
                     id: 'member000001',
                     name: '김철수',
@@ -143,7 +157,7 @@ const saveMember = async () => {
         // if (!response.ok) throw new Error('Failed to update member')
 
         // For mock purposes, we'll just update the local state
-        member.value.status = status.value
+        member.value.status = status.value ? status.value : 'ACTIVE'
         member.value.currentGrade = currentGrade.value
 
         // If status is WITHDRAW, set withdrawDate to today
@@ -177,7 +191,7 @@ const handleConfirmClose = (confirmed: boolean) => {
 
 // Go back to members list
 const goBack = () => {
-    router.push('/member')
+    router.push('/member/search')
 }
 
 // View member tree
