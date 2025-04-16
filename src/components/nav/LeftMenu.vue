@@ -2,6 +2,7 @@
 import {onMounted, onUnmounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useAuthStore} from "@/store/auth/auth";
+import {useSecureFetch} from "@/composable/fetch/use-secure-fetch";
 
 const router = useRouter()
 const isOpen = ref(false)
@@ -10,7 +11,7 @@ const authStore = useAuthStore()
 
 const menuItems = [
     {path: '/', label: '대시보드'},
-    {path: '/sponsorship', label: '후원 방식'},
+    {path: '/plan', label: '보상 플랜'},
     {path: '/grade/search', label: '등급 관리'},
     {path: '/member/search', label: '회원 관리'},
     {path: '/order/search', label: '주문 관리'},
@@ -34,10 +35,20 @@ const navigate = (path: string) => {
     }
 }
 
-const logout = async () => {
-    // TODO 리프레시 토큰 제거 API
-    authStore.clearAuth()
-    await router.push('/signin')
+const signOut = async () => {
+    const { secureRequest: signOutRequest } = useSecureFetch()
+    try {
+        await signOutRequest('/auth/sign-out', {
+            method: 'DELETE'
+        })
+    } catch (error: any) {
+        console.warn('Failed to sign out. Reset client auth:', error)
+    } finally {
+        authStore.clearAuth()
+        alert('로그아웃되었습니다.')
+        await router.push('/signin')
+    }
+
 }
 
 onMounted(() => {
@@ -100,7 +111,7 @@ onUnmounted(() => {
 
             <div class="p-4 border-b">
                 <button
-                    @click="logout"
+                    @click="signOut"
                     class="w-full px-4 py-2 text-left rounded-md text-red-600 hover:bg-red-50 transition-colors duration-200"
                 >
                     로그아웃

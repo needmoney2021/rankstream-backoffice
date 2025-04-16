@@ -1,43 +1,41 @@
-import {useAuthStore} from '@/store/auth/auth'
-import {useFetchStore} from '@/store/fetch/fetch'
+import { useAuthStore } from '@/store/auth/auth'
+import { useFetchStore } from '@/store/fetch/fetch'
 
 export function useSecureFetch() {
     const authStore = useAuthStore()
     const fetchStore = useFetchStore()
     
-    let csrfToken: string
+    const getCsrfTokenFromCookie = (): string | null => {
+        return document.cookie
+            .split('; ')
+            .find(row => row.startsWith('XSRF-TOKEN='))
+            ?.split('=')[1] ?? null
+    }
     
-    const getCsrfToken = async (): Promise<string> => {
+    const fetchCsrfToken = async (): Promise<void> => {
         try {
-            const response = await fetch('/csrf', {
+            const response = await fetch(`/api/csrf`, {
                 credentials: 'include'
             })
             
             if (!response.ok) {
-                throw new Error('Failed to get CSRF token')
+                throw new Error('Failed to fetch CSRF token')
             }
-            
-            const data = await response.json()
-            csrfToken = data.token
-            return csrfToken
-        } catch (error) {
-            console.error('Error getting CSRF token:', error)
-            throw error
+        } catch (err) {
+            console.error('CSRF token fetch failed:', err)
+            throw err
         }
     }
     
     const refreshToken = async (): Promise<string> => {
-        if (!authStore.refreshToken) {
-            throw new Error('No refresh token available')
-        }
         
         try {
-            const response = await fetch('/refresh-token', {
+            const response = await fetch(`/api/auth/refresh-token`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Refresh-Token': authStore.refreshToken,
-                }
+                },
+                credentials: 'include',
             })
             
             if (!response.ok) {
@@ -45,99 +43,89 @@ export function useSecureFetch() {
             }
             
             const data = await response.json()
+            
             authStore.setAuth({
                 userId: authStore.userId as string,
-                companyId: authStore.companyId as number,
+                companyIdx: authStore.companyIdx as number,
                 accessToken: data.accessToken,
-                refreshToken: data.refreshToken
             })
             
             return data.accessToken
-        } catch (error) {
-            console.error('Error refreshing token:', error)
+        } catch (err) {
+            console.error('Token refresh failed:', err)
             authStore.clearAuth()
-            throw error
+            throw err
         }
     }
     
     const secureRequest = async (url: string, options: RequestInit = {}): Promise<Response> => {
-        // Update fetching state
         fetchStore.setFetching(true)
         
+        const fullUrl = `/api${url}`
+        const method = options.method?.toUpperCase() || 'GET'
+        const needsCsrfToken = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+        let retried = false
+        
         try {
-            // Check if CSRF token is needed
-            const needsCsrfToken = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method || 'GET')
+            const headers = new Headers(options.headers)
             
-            if (needsCsrfToken && !csrfToken) {
-                try {
-                    await getCsrfToken()
-                } catch (error) {
-                    console.error('Failed to get CSRF token:', error)
+            // Add CSRF token
+            if (needsCsrfToken) {
+                if (!getCsrfTokenFromCookie()) {
+                    await fetchCsrfToken()
+                }
+                
+                const csrfToken = getCsrfTokenFromCookie()
+                if (csrfToken) {
+                    headers.set('X-XSRF-TOKEN', csrfToken)
                 }
             }
             
-            // Set up headers
-            const headers = new Headers(options.headers)
-            
-            // Add CSRF token if needed
-            if (needsCsrfToken && csrfToken) {
-                headers.set('X-XSRF-TOKEN', csrfToken)
-            }
-            
-            // Add authorization if logged in
+            // Add JWT access token
             if (authStore.accessToken) {
                 headers.set('Authorization', `Bearer ${authStore.accessToken}`)
             }
             
-            // Make request
-            const response = await fetch(url, {
+            let response = await fetch(fullUrl, {
                 ...options,
                 headers,
-                credentials: 'include'
+                credentials: 'include',
             })
             
-            // Handle token expiration
-            if (response.status === 401 && authStore.refreshToken) {
+            // If access token expired
+            if (response.status === 401) {
                 try {
-                    // Try to refresh the token
-                    const newToken = await refreshToken()
+                    const newAccessToken = await refreshToken()
+                    headers.set('Authorization', `Bearer ${newAccessToken}`)
                     
-                    // Update authorization header with new token
-                    headers.set('Authorization', `Bearer ${newToken}`)
-                    
-                    // Retry the request with the new token
-                    return fetch(url, {
+                    response = await fetch(fullUrl, {
                         ...options,
                         headers,
-                        credentials: 'include'
+                        credentials: 'include',
                     })
                 } catch (refreshError) {
-                    console.error('Failed to refresh token:', refreshError)
                     throw refreshError
                 }
-            } else if (response.status === 403 && needsCsrfToken) {
-                // CSRF token might be expired, try to get a new one and retry
-                try {
-                    await getCsrfToken()
-                    
-                    if (csrfToken) {
-                        headers.set('X-XSRF-TOKEN', csrfToken)
-                        
-                        // Retry the request with the new CSRF token
-                        return fetch(url, {
-                            ...options,
-                            headers,
-                            credentials: 'include'
-                        })
-                    }
-                } catch (csrfError) {
-                    console.error('Failed to refresh CSRF token:', csrfError)
+            }
+            
+            // If CSRF token expired
+            else if (response.status === 403 && needsCsrfToken && !retried) {
+                retried = true
+                await fetchCsrfToken()
+                
+                const csrfToken = getCsrfTokenFromCookie()
+                if (csrfToken) {
+                    headers.set('X-XSRF-TOKEN', csrfToken)
+                    response = await fetch(fullUrl, {
+                        ...options,
+                        headers,
+                        credentials: 'include',
+                    })
                 }
             }
             
             return response
         } finally {
-            // Update fetching state
             fetchStore.setFetching(false)
         }
     }

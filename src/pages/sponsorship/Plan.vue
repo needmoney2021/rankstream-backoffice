@@ -8,7 +8,7 @@ const showSecondConfirmModal = ref(false)
 const confirmMessage = ref('')
 
 const openConfirmModal = () => {
-    confirmMessage.value = '후원 방식 변경 시 회원 및 주문 데이터가 삭제되고 다시 동기화하여야 합니다. 정말 진행하시겠습니까?'
+    confirmMessage.value = '보상 플랜 변경 시 회원 및 주문 데이터가 삭제되고 다시 동기화하여야 합니다. 정말 진행하시겠습니까?'
     showConfirmModal.value = true
 }
 
@@ -44,18 +44,18 @@ const saveTreeType = () => {
     // })
 
     // For the demo, we'll simulate a successful save
-    alert('후원 방식이 성공적으로 변경되었습니다.')
+    alert('보상 플랜이 성공적으로 변경되었습니다.')
 }
 </script>
 
 <template>
     <div class="p-6">
-        <h1 class="text-2xl font-bold mb-6">후원 방식 설정</h1>
+        <h1 class="text-2xl font-bold mb-6">보상 플랜 설정</h1>
 
         <div class="bg-white p-6 rounded-lg shadow">
             <div class="mb-4">
-                <h2 class="text-lg font-semibold mb-2">트리 종류 선택</h2>
-                <p class="text-sm text-gray-600 mb-4">회사의 후원 트리 구조를 설정합니다. 이 설정은 회원 구조와 밀접한 관계가 있습니다.</p>
+                <h2 class="text-lg font-semibold mb-2">플랜 선택</h2>
+                <p class="text-sm text-gray-600 mb-4">회사의 보상 플랜을 설정합니다. 이 설정은 회원 구조와 밀접한 관계가 있습니다.</p>
 
                 <div class="space-y-2">
                     <div class="flex items-center">

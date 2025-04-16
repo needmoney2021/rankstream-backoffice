@@ -1,32 +1,30 @@
 import {defineStore} from 'pinia'
 import {ref} from 'vue'
+import {Auth} from "@/types/auth/auth";
 
 export const useAuthStore = defineStore('auth', () => {
     const userId = ref<string | null>(null)
-    const companyId = ref<number | null>(null)
+    const companyIdx = ref<number | null>(null)
     const accessToken = ref<string | null>(null)
-    const refreshToken = ref<string | null>(null)
     
-    function setAuth(auth: { userId: string, companyId: number, accessToken: string, refreshToken: string }) {
+    function setAuth(auth: Auth) {
         userId.value = auth.userId
-        companyId.value = auth.companyId
+        companyIdx.value = auth.companyIdx
         accessToken.value = auth.accessToken
-        refreshToken.value = auth.refreshToken
         
         // Save to localStorage to persist across page refreshes
         localStorage.setItem('auth', JSON.stringify({
             userId: auth.userId,
-            companyId: auth.companyId,
+            companyIdx: auth.companyIdx,
             accessToken: auth.accessToken,
-            refreshToken: auth.refreshToken
         }))
+        
     }
     
     function clearAuth() {
         userId.value = null
-        companyId.value = null
+        companyIdx.value = null
         accessToken.value = null
-        refreshToken.value = null
         
         // Remove from localStorage
         localStorage.removeItem('auth')
@@ -42,9 +40,8 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const auth = JSON.parse(storedAuth)
             userId.value = auth.userId
-            companyId.value = auth.companyId
+            companyIdx.value = auth.companyId
             accessToken.value = auth.accessToken
-            refreshToken.value = auth.refreshToken
         } catch (error) {
             console.error('Failed to parse stored auth', error)
             clearAuth()
@@ -53,9 +50,8 @@ export const useAuthStore = defineStore('auth', () => {
     
     return {
         userId,
-        companyId,
+        companyIdx,
         accessToken,
-        refreshToken,
         setAuth,
         clearAuth,
         isAuthenticated

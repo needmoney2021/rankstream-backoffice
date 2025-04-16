@@ -1,11 +1,18 @@
 <script lang='ts' setup>
-import {ref} from 'vue'
+import {computed, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import {useAuthStore} from '@/store/auth/auth'
+import {useSecureFetch} from "@/composable/fetch/use-secure-fetch";
+import {useFetchStore} from "@/store/fetch/fetch";
+import {Auth} from "@/types/auth/auth";
+
+const fetchStore = useFetchStore()
 
 const email = ref('')
 const password = ref('')
-const isLoading = ref(false)
+const isLoading = computed(() => {
+    return fetchStore.isFetching
+})
 const errorMessage = ref('')
 
 const router = useRouter()
@@ -18,29 +25,37 @@ const handleLogin = async () => {
     }
 
     try {
-        isLoading.value = true
         errorMessage.value = ''
 
-        // In a real implementation, this would call an API
-        console.debug('Attempting login with:', email.value)
+        const { secureRequest: signInRequest } = useSecureFetch()
+        const signInResponse = await signInRequest('/auth/signin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email.value, password: password.value })
+        })
 
-        // Mock login for now - to be implemented by a human
-        setTimeout(() => {
-            // Simulate successful login
-            authStore.setAuth({
-                userId: email.value,
-                companyId: 1,
-                accessToken: 'mock-token-' + Math.random(),
-                refreshToken: 'mock-refresh-token-' + Math.random()
-            })
+        if (!signInResponse.ok) {
+            try {
+                const { code, message } = await signInResponse.json()
+                console.error('Failed to sign in:', code, message)
+                alert(`로그인 실패: ${message}`)
+            } catch (error) {
+                console.error('Failed to parse sign in error response:', error)
+                alert('서버 응답을 파싱할 수 없습니다.')
+            }
+            return
+        }
 
-            router.push('/dashboard')
-            isLoading.value = false
-        }, 1000)
+        const data = await signInResponse.json() as Auth
+        authStore.setAuth(data)
+        await router.push('/dashboard')
+        return
+
     } catch (error: any) {
-        console.error('Login error:', error)
+        console.error('Failed to sign in:', error)
         errorMessage.value = error.message || '로그인에 실패했습니다.'
-        isLoading.value = false
     }
 }
 </script>

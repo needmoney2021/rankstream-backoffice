@@ -2,8 +2,8 @@
     "name": "rankstream-backoffice",
     "version": "1.0.0",
     "scripts": {
-        "dev": "vite",
-        "build": "vite build",
+        "dev": "vite --mode dev",
+        "build:local": "vite build --mode dev",
         "serve": "vite preview",
         "test": "jest"
     },

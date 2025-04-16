@@ -20,9 +20,9 @@ const routes: Array<RouteRecordRaw> = [
         meta: {requiresAuth: true}
     },
     {
-        path: '/sponsorship',
-        name: 'SponsorShip',
-        component: () => import('../pages/sponsorship/SponsorShip.vue'),
+        path: '/plan',
+        name: 'Plan',
+        component: () => import('../pages/sponsorship/Plan.vue'),
         meta: {requiresAuth: true}
     },
     {
