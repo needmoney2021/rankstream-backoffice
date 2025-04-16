@@ -105,6 +105,27 @@ const routes: Array<RouteRecordRaw> = [
         meta: {requiresAuth: true}
     },
     {
+        path: '/admin',
+        children: [
+            {
+                path: 'search',
+                name: 'AdministratorSearch',
+                component: () => import('../pages/admin/AdministratorSearch.vue')
+            },
+            {
+                path: 'detail/:id',
+                name: 'AdministratorDetail',
+                component: () => import('../pages/admin/AdministratorDetail.vue')
+            },
+            {
+                path: 'register',
+                name: 'AdministratorRegister',
+                component: () => import('../pages/admin/AdministratorRegister.vue')
+            }
+        ],
+        meta: {requiresAuth: true}
+    },
+    {
         path: '/:pathMatch(.*)*',
         redirect: '/dashboard'
     }

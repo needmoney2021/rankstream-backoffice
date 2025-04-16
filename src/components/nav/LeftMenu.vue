@@ -16,7 +16,8 @@ const menuItems = [
     {path: '/member/search', label: '회원 관리'},
     {path: '/order/search', label: '주문 관리'},
     {path: '/order/snapshot', label: '주문 마감 내역'},
-    {path: '/schedule/detail', label: '스케줄 관리'}
+    {path: '/schedule/detail', label: '스케줄 관리'},
+    {path: '/admin/search', label: '관리자 관리'}
 ]
 
 const toggleMenu = () => {
