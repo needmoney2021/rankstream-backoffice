@@ -1,53 +1,65 @@
 <script setup lang='ts'>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import { useRouter } from 'vue-router'
 import ResultTable from '@/components/table/ResultTable.vue'
+import {useFetchStore} from "@/store/fetch/fetch";
+import {useSecureFetch} from "@/composable/fetch/use-secure-fetch";
+import {ApiError} from "@/types/error/apierror";
+import {Admin} from "@/types/admin/admin";
+
+const fetchStore = useFetchStore()
+
+const isFetching = computed(() => {
+    return fetchStore.isFetching
+})
 
 const router = useRouter()
 
 const searchParams = ref({
     name: '',
-    department: '',
     id: '',
-    status: ''
+    state: ''
 })
 
 const columns = [
-    { key: 'companyName', label: '소속회사명' },
+    { key: 'companyName', label: '소속사' },
     { key: 'id', label: '아이디' },
     { key: 'name', label: '이름' },
     { key: 'department', label: '부서' },
-    { key: 'status', label: '상태' },
-    { key: 'registrant', label: '등록자' },
-    { key: 'registeredAt', label: '등록일시' }
+    { key: 'state', label: '상태' },
+    { key: 'createdAt', label: '등록자' },
+    { key: 'createdBy', label: '등록일시' },
+    { key: 'updatedAt', label: '수정자' },
+    { key: 'updatedBy', label: '수정일시' },
 ]
 
-const tableData = ref([])
+const tableData = ref<Admin[]>([])
 
 const search = async () => {
-    // Simulate API call
-    setTimeout(() => {
-        tableData.value = [
-            {
-                companyName: '테스트회사',
-                id: 'admin1',
-                name: '관리자1',
-                department: '개발팀',
-                status: '활성',
-                registrant: 'superadmin',
-                registeredAt: '2024-03-20 10:00:00'
-            },
-            {
-                companyName: '테스트회사',
-                id: 'admin2',
-                name: '관리자2',
-                department: '운영팀',
-                status: '비활성',
-                registrant: 'superadmin',
-                registeredAt: '2024-03-21 11:00:00'
-            }
-        ]
-    }, 500)
+    const params = new URLSearchParams()
+
+    Object.keys(searchParams.value).forEach(key => {
+        const value = searchParams.value[key as keyof typeof searchParams.value]
+        if (value !== '') {
+            params.append(key, value)
+        }
+    })
+    const { secureRequest: searchRequest } = useSecureFetch()
+    const url = `/administrators?${params.toString()}`
+    try {
+        const searchResponse = await searchRequest(url, { method: 'GET' })
+        if (searchResponse.ok) {
+            tableData.value = await searchResponse.json()
+        } else {
+            tableData.value = []
+            const apiError = await searchResponse.json() as ApiError
+            console.error('Failed to search administrators:', apiError)
+            alert(apiError.message)
+        }
+    } catch (error: any) {
+        console.error('Failed to search administrators:', error)
+        alert(error.message || '알 수 없는 오류입니다.')
+    }
 }
 
 const handleRowDoubleClick = (row: any) => {
@@ -73,19 +85,15 @@ onMounted(() => {
                     <input v-model="searchParams.name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">부서</label>
-                    <input v-model="searchParams.department" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                </div>
-                <div>
                     <label class="block text-sm font-medium text-gray-700">아이디</label>
                     <input v-model="searchParams.id" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">상태</label>
-                    <select v-model="searchParams.status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <select v-model="searchParams.state" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">전체</option>
-                        <option value="활성">활성</option>
-                        <option value="비활성">비활성</option>
+                        <option value="ACTIVE">활성</option>
+                        <option value="DEACTIVATED">비활성</option>
                     </select>
                 </div>
             </div>
@@ -113,4 +121,4 @@ onMounted(() => {
 </template>
 
 <style scoped>
-</style> 
+</style>
