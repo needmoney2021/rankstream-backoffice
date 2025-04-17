@@ -39,9 +39,12 @@ const navigate = (path: string) => {
 const signOut = async () => {
     const { secureRequest: signOutRequest } = useSecureFetch()
     try {
-        await signOutRequest('/auth/sign-out', {
+        const response = await signOutRequest('/auth/sign-out', {
             method: 'DELETE'
         })
+        if (!response) {
+            return
+        }
     } catch (error: any) {
         console.warn('Failed to sign out. Reset client auth:', error)
     } finally {
@@ -49,7 +52,6 @@ const signOut = async () => {
         alert('로그아웃되었습니다.')
         await router.push('/signin')
     }
-
 }
 
 onMounted(() => {

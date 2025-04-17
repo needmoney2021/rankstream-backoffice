@@ -48,6 +48,10 @@ const search = async () => {
     const url = `/administrators?${params.toString()}`
     try {
         const searchResponse = await searchRequest(url, { method: 'GET' })
+        if (!searchResponse) {
+            return
+        }
+        
         if (searchResponse.ok) {
             tableData.value = await searchResponse.json()
         } else {

@@ -36,6 +36,10 @@ const handleLogin = async () => {
             body: JSON.stringify({ email: email.value, password: password.value })
         })
 
+        if (!signInResponse) {
+            return
+        }
+
         if (!signInResponse.ok) {
             try {
                 const { code, message } = await signInResponse.json()

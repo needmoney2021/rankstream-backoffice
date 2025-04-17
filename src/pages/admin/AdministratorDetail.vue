@@ -19,19 +19,7 @@ const showPasswordChange = ref(false)
 
 const fetchAdminInfo = async () => {
     const { secureRequest: searchRequest } = useSecureFetch()
-    try {
-        const searchResponse = await searchRequest(`/administrators/${adminId}`, { method: 'GET' })
-        if (searchResponse.ok) {
-            adminInfo.value = await searchResponse.json() as Admin
-        } else {
-            const apiError = await searchResponse.json() as ApiError
-            console.error('Failed to search administrators:', apiError)
-            alert(apiError.message)
-        }
-    } catch (error: any) {
-        console.error('Failed to search administrators:', error)
-        alert(error.message || '알 수 없는 오류입니다.')
-    }
+
 }
 
 const updateAdmin = async () => {
