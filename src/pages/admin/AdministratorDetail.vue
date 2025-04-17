@@ -2,41 +2,36 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ModalConfirm from '@/components/modal/ModalConfirm.vue'
+import {Admin} from "@/types/admin/admin";
+import {useSecureFetch} from "@/composable/fetch/use-secure-fetch";
+import {ApiError} from "@/types/error/apierror";
 
 const route = useRoute()
 const router = useRouter()
 
 const adminId = route.params.id as string
 
-const adminInfo = ref({
-    companyName: '',
-    id: '',
-    status: '',
-    department: '',
-    registrant: '',
-    registeredAt: '',
-    modifier: '',
-    modifiedAt: ''
-})
+const adminInfo = ref<Admin>()
 
 const password = ref('')
 const newPassword = ref('')
 const showPasswordChange = ref(false)
 
 const fetchAdminInfo = async () => {
-    // Simulate API call
-    setTimeout(() => {
-        adminInfo.value = {
-            companyName: '테스트회사',
-            id: adminId,
-            status: '활성',
-            department: '개발팀',
-            registrant: 'superadmin',
-            registeredAt: '2024-03-20 10:00:00',
-            modifier: 'superadmin',
-            modifiedAt: '2024-03-21 11:00:00'
+    const { secureRequest: searchRequest } = useSecureFetch()
+    try {
+        const searchResponse = await searchRequest(`/administrators/${adminId}`, { method: 'GET' })
+        if (searchResponse.ok) {
+            adminInfo.value = await searchResponse.json() as Admin
+        } else {
+            const apiError = await searchResponse.json() as ApiError
+            console.error('Failed to search administrators:', apiError)
+            alert(apiError.message)
         }
-    }, 500)
+    } catch (error: any) {
+        console.error('Failed to search administrators:', error)
+        alert(error.message || '알 수 없는 오류입니다.')
+    }
 }
 
 const updateAdmin = async () => {
@@ -64,7 +59,7 @@ onMounted(() => {
 <template>
     <div class="p-4">
         <h1 class="text-2xl font-bold mb-4">관리자 상세</h1>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">소속회사명</label>
@@ -132,4 +127,4 @@ onMounted(() => {
 </template>
 
 <style scoped>
-</style> 
+</style>
