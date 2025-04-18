@@ -4,11 +4,14 @@ import {useRouter} from 'vue-router'
 import {useSearchStore} from '@/store/search/search'
 import ResultTable from '@/components/table/ResultTable.vue'
 import {Member, MemberSearchParams} from '@/types/member/member'
+import { useSecureFetch } from '@/composable/fetch/use-secure-fetch'
+import { ApiError } from '@/types/error/apierror'
+import { useFetchStore } from '@/store/fetch/fetch'
 
 const router = useRouter()
 const searchStore = useSearchStore()
+const fetchStore = useFetchStore()
 const members = ref<Member[]>([])
-const isLoading = ref(false)
 const error = ref('')
 
 // Search params
@@ -23,110 +26,48 @@ const columns = [
     {key: 'id', label: '회원 아이디', width: '150px'},
     {key: 'name', label: '이름', width: '150px'},
     {key: 'gender', label: '성별', width: '80px'},
-    {key: 'status', label: '상태', width: '100px'},
-    {key: 'joinDate', label: '가입일', width: '120px'},
-    {key: 'withdrawDate', label: '탈퇴일', width: '120px'},
+    {key: 'state', label: '상태', width: '100px'},
+    {key: 'createdAt', label: '가입일', width: '120px'},
+    {key: 'updatedAt', label: '수정일', width: '120px'},
     {key: 'childrenCount', label: '하위 회원 수', width: '130px'},
-    {key: 'currentGrade', label: '현재 등급', width: '120px'}
+    {key: 'gradeName', label: '현재 등급', width: '120px'}
 ]
 
 // Method to search members
 const searchMembers = async () => {
     try {
-        isLoading.value = true
         error.value = ''
 
         // Save search params to store
         searchStore.saveSearchParams('memberSearch', searchParams.value)
 
-        // This would be an actual API call in a real implementation
-        // const queryParams = new URLSearchParams()
-        // if (searchParams.value.memberId) queryParams.append('memberId', searchParams.value.memberId)
-        // if (searchParams.value.name) queryParams.append('name', searchParams.value.name)
-        // if (searchParams.value.gender) queryParams.append('gender', searchParams.value.gender)
-        //
-        // const response = await fetch(`/api/members?${queryParams}`)
-        // if (!response.ok) throw new Error('Failed to fetch members')
-        // members.value = await response.json()
+        // Build query string
+        const queryParams = new URLSearchParams()
+        if (searchParams.value.memberId) queryParams.append('memberId', searchParams.value.memberId)
+        if (searchParams.value.name) queryParams.append('name', searchParams.value.name)
+        if (searchParams.value.gender) queryParams.append('gender', searchParams.value.gender)
 
-        // For now, generate mock data based on search params
-        setTimeout(() => {
-            // Simple mock filtering based on search params
-            const mockMembers: Member[] = [
-                {
-                    id: 'member000001',
-                    name: '김철수',
-                    gender: 'M',
-                    status: 'ACTIVE',
-                    joinDate: '2023-01-15',
-                    childrenCount: 5,
-                    currentGrade: '골드'
-                },
-                {
-                    id: 'member000002',
-                    name: '이영희',
-                    gender: 'F',
-                    status: 'ACTIVE',
-                    joinDate: '2023-02-20',
-                    childrenCount: 3,
-                    currentGrade: '실버'
-                },
-                {
-                    id: 'member000003',
-                    name: '박지민',
-                    gender: 'M',
-                    status: 'INACTIVE',
-                    joinDate: '2023-03-05',
-                    childrenCount: 0,
-                    currentGrade: '브론즈'
-                },
-                {
-                    id: 'member000004',
-                    name: '최유나',
-                    gender: 'F',
-                    status: 'ACTIVE',
-                    joinDate: '2023-04-10',
-                    childrenCount: 7,
-                    currentGrade: '플래티넘'
-                },
-                {
-                    id: 'member000005',
-                    name: '정민수',
-                    gender: 'M',
-                    status: 'WITHDRAW',
-                    joinDate: '2023-05-15',
-                    withdrawDate: '2023-08-20',
-                    childrenCount: 2,
-                    currentGrade: '실버'
-                }
-            ]
+        const { secureRequest: getMembersRequest } = useSecureFetch()
+        const response = await getMembersRequest(`/members?${queryParams.toString()}`, { method: 'GET' })
+        
+        if (!response) {
+            return
+        }
 
-            // Filter based on search params
-            members.value = mockMembers.filter(member => {
-                const matchesId = !searchParams.value.memberId ||
-                    member.id.toLowerCase().includes(searchParams.value.memberId.toLowerCase())
-
-                const matchesName = !searchParams.value.name ||
-                    member.name.includes(searchParams.value.name)
-
-                const matchesGender = !searchParams.value.gender ||
-                    member.gender === searchParams.value.gender
-
-                return matchesId && matchesName && matchesGender
-            })
-
-            isLoading.value = false
-        }, 500)
-
+        if (response.ok) {
+            members.value = await response.json() as Member[]
+        } else {
+            const apiError = await response.json() as ApiError
+            error.value = apiError.message
+        }
     } catch (err: any) {
         error.value = err.message || '회원 정보를 검색하는데 실패했습니다.'
-        isLoading.value = false
     }
 }
 
 // Handle row double click
 const handleRowDoubleClick = (member: Member) => {
-    router.push(`/member/detail/${member.id}`)
+    router.push(`/member/detail/${member.idx}`)
 }
 
 // Handle input changes and update search store
@@ -202,24 +143,32 @@ onMounted(() => {
                         @change="handleInputChange"
                     >
                         <option value="">전체</option>
-                        <option value="M">남성</option>
-                        <option value="F">여성</option>
+                        <option value="MALE">남성</option>
+                        <option value="FEMALE">여성</option>
                     </select>
                 </div>
             </div>
 
             <div class="mt-4 flex justify-end">
                 <button
-                    class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="searchMembers"
+                    :disabled="fetchStore.isFetching"
                 >
-                    조회
+                    <span v-if="fetchStore.isFetching" class="inline-flex items-center">
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        조회 중...
+                    </span>
+                    <span v-else>조회</span>
                 </button>
             </div>
         </div>
 
         <!-- Search Results -->
-        <div v-if="isLoading" class="text-center py-10">
+        <div v-if="fetchStore.isFetching" class="text-center py-10">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
             <p class="mt-2 text-gray-600">회원 정보를 불러오는 중...</p>
         </div>

@@ -5,6 +5,7 @@ import ModalConfirm from '@/components/modal/ModalConfirm.vue'
 import { useSecureFetch } from '@/composable/fetch/use-secure-fetch'
 import { ApiError } from '@/types/error/apierror'
 import { useFetchStore } from '@/store/fetch/fetch'
+import { Grade } from '@/types/grade/grade'
 
 const router = useRouter()
 const fetchStore = useFetchStore()
@@ -28,7 +29,7 @@ const error = ref('')
 const showConfirmModal = ref(false)
 
 // Grade options
-const gradeOptions = ref<{value: string, label: string}[]>([])
+const gradeOptions = ref<{value: number, label: string}[]>([])
 
 // Set today's date as default join date
 onMounted(async () => {
@@ -45,8 +46,8 @@ onMounted(async () => {
         }
 
         if (gradeResponse.ok) {
-            const grades = await gradeResponse.json()
-            gradeOptions.value = grades.map((grade: any) => ({
+            const grades = await gradeResponse.json() as Grade[]
+            gradeOptions.value = grades.map((grade: Grade) => ({
                 value: grade.idx,
                 label: grade.name
             }))
