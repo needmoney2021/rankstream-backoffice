@@ -28,10 +28,10 @@ const columns = [
     { key: 'name', label: '이름' },
     { key: 'department', label: '부서' },
     { key: 'state', label: '상태' },
-    { key: 'createdAt', label: '등록자' },
-    { key: 'createdBy', label: '등록일시' },
-    { key: 'updatedAt', label: '수정자' },
-    { key: 'updatedBy', label: '수정일시' },
+    { key: 'createdAt', label: '등록일시' },
+    { key: 'createdBy', label: '등록자' },
+    { key: 'updatedAt', label: '수정자일시' },
+    { key: 'updatedBy', label: '수정자' },
 ]
 
 const tableData = ref<Admin[]>([])

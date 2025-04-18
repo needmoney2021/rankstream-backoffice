@@ -5,9 +5,11 @@ import ModalConfirm from '@/components/modal/ModalConfirm.vue'
 import {Admin} from "@/types/admin/admin";
 import {useSecureFetch} from "@/composable/fetch/use-secure-fetch";
 import {ApiError} from "@/types/error/apierror";
+import { useFetchStore } from '@/store/fetch/fetch'
 
 const route = useRoute()
 const router = useRouter()
+const fetchStore = useFetchStore()
 
 const adminIdx = route.params.id as string
 
@@ -179,8 +181,19 @@ onMounted(() => {
             <button @click="goToList" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">
                 목록으로
             </button>
-            <button @click="updateAdmin" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
-                수정
+            <button 
+                @click="updateAdmin" 
+                class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="fetchStore.isFetching"
+            >
+                <span v-if="fetchStore.isFetching" class="inline-flex items-center">
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    수정 중...
+                </span>
+                <span v-else>수정</span>
             </button>
         </div>
     </div>

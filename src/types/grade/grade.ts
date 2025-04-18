@@ -1,5 +1,5 @@
 export interface Grade {
-    readonly id: number
+    readonly idx: number
     name: string
     achievementPoint: number
     refundRate: number

@@ -3,6 +3,8 @@ import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import ResultTable from '@/components/table/ResultTable.vue'
 import {Grade} from '@/types/grade/grade'
+import { useSecureFetch } from '@/composable/fetch/use-secure-fetch'
+import { ApiError } from '@/types/error/apierror'
 
 const router = useRouter()
 const grades = ref<Grade[]>([])
@@ -11,7 +13,7 @@ const error = ref('')
 
 // Define table columns
 const columns = [
-    {key: 'id', label: '등급 키', width: '100px'},
+    {key: 'idx', label: '등급 키', width: '100px'},
     {key: 'name', label: '등급 이름', width: '150px'},
     {key: 'achievementPoint', label: '등급 달성 포인트', width: '150px'},
     {key: 'refundRate', label: '환급률', width: '100px'},
@@ -27,68 +29,22 @@ const fetchGrades = async () => {
         isLoading.value = true
         error.value = ''
 
-        // This would be an actual API call in a real implementation
-        // const response = await fetch('/api/grades')
-        // if (!response.ok) throw new Error('Failed to fetch grades')
-        // grades.value = await response.json()
+        const { secureRequest: searchRequest } = useSecureFetch()
+        const searchResponse = await searchRequest('/grade', { method: 'GET' })
 
-        // For now, generate mock data
-        grades.value = [
-            {
-                id: 1,
-                name: '브론즈',
-                achievementPoint: 1000,
-                refundRate: 0.01,
-                createdBy: 'admin',
-                createdAt: '2023-05-15T08:00:00Z',
-                updatedBy: 'admin',
-                updatedAt: '2023-05-15T08:00:00Z'
-            },
-            {
-                id: 2,
-                name: '실버',
-                achievementPoint: 5000,
-                refundRate: 0.03,
-                createdBy: 'admin',
-                createdAt: '2023-05-15T08:05:00Z',
-                updatedBy: 'admin',
-                updatedAt: '2023-05-15T08:05:00Z'
-            },
-            {
-                id: 3,
-                name: '골드',
-                achievementPoint: 10000,
-                refundRate: 0.05,
-                createdBy: 'admin',
-                createdAt: '2023-05-15T08:10:00Z',
-                updatedBy: 'admin',
-                updatedAt: '2023-05-15T08:10:00Z'
-            },
-            {
-                id: 4,
-                name: '플래티넘',
-                achievementPoint: 20000,
-                refundRate: 0.08,
-                createdBy: 'admin',
-                createdAt: '2023-05-15T08:15:00Z',
-                updatedBy: 'admin',
-                updatedAt: '2023-05-15T08:15:00Z'
-            },
-            {
-                id: 5,
-                name: '다이아몬드',
-                achievementPoint: 50000,
-                refundRate: 0.12,
-                createdBy: 'admin',
-                createdAt: '2023-05-15T08:20:00Z',
-                updatedBy: 'admin',
-                updatedAt: '2023-05-15T08:20:00Z'
-            }
-        ]
+        if (!searchResponse) {
+            return
+        }
 
-        // Sort by achievement point in descending order
-        grades.value.sort((a, b) => b.achievementPoint - a.achievementPoint)
-
+        if (searchResponse.ok) {
+            grades.value = await searchResponse.json()
+            // Sort by achievement point in descending order
+            grades.value.sort((a, b) => b.achievementPoint - a.achievementPoint)
+        } else {
+            const apiError = await searchResponse.json() as ApiError
+            console.error('Failed to fetch grades:', apiError)
+            error.value = apiError.message
+        }
     } catch (err: any) {
         error.value = err.message || '등급 정보를 불러오는데 실패했습니다.'
         console.error('Error fetching grades:', err)
@@ -99,7 +55,7 @@ const fetchGrades = async () => {
 
 // Handle row double click
 const handleRowDoubleClick = (grade: Grade) => {
-    router.push(`/grade/detail/${grade.id}`)
+    router.push(`/grade/detail/${grade.idx}`)
 }
 
 // Handle creating a new grade
@@ -143,7 +99,7 @@ onMounted(() => {
             <ResultTable
                 :columns="columns"
                 :data="grades"
-                keyColumn="id"
+                keyColumn="idx"
                 @row-dblclick="handleRowDoubleClick"
                 @clear-table-data="clearTableData"
             />
