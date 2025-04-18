@@ -2,8 +2,12 @@
 import {onMounted, ref} from 'vue'
 import {useRouter} from 'vue-router'
 import ModalConfirm from '@/components/modal/ModalConfirm.vue'
+import { useSecureFetch } from '@/composable/fetch/use-secure-fetch'
+import { ApiError } from '@/types/error/apierror'
+import { useFetchStore } from '@/store/fetch/fetch'
 
 const router = useRouter()
+const fetchStore = useFetchStore()
 
 // Company sponsorship type
 const sponsorshipType = ref<'binary' | 'non-binary'>('binary')
@@ -14,7 +18,7 @@ const memberId = ref('')
 const name = ref('')
 const gender = ref('M')
 const joinDate = ref('')
-const currentGrade = ref('브론즈')
+const currentGrade = ref('')
 const recommenderId = ref('')
 const sponsorId = ref('')
 const position = ref('Left')
@@ -24,33 +28,41 @@ const error = ref('')
 const showConfirmModal = ref(false)
 
 // Grade options
-const gradeOptions = [
-    {value: '브론즈', label: '브론즈'},
-    {value: '실버', label: '실버'},
-    {value: '골드', label: '골드'},
-    {value: '플래티넘', label: '플래티넘'},
-    {value: '다이아몬드', label: '다이아몬드'}
-]
+const gradeOptions = ref<{value: string, label: string}[]>([])
 
 // Set today's date as default join date
-onMounted(() => {
+onMounted(async () => {
     const today = new Date().toISOString().split('T')[0]
     joinDate.value = today
 
-    // Fetch company sponsorship type
-    // This would be an actual API call in a real implementation
-    // const response = await fetch('/api/company/sponsorship-type')
-    // if (response.ok) {
-    //     const data = await response.json()
-    //     sponsorshipType.value = data.type
-    // }
+    try {
+        // Fetch grade options
+        const { secureRequest: gradeRequest } = useSecureFetch()
+        const gradeResponse = await gradeRequest('/grade', { method: 'GET' })
+        
+        if (!gradeResponse) {
+            return
+        }
 
-    // For mock purposes, we'll use static data
-    setTimeout(() => {
-        // Simulate API response
-        sponsorshipType.value = 'binary' // or 'non-binary'
+        if (gradeResponse.ok) {
+            const grades = await gradeResponse.json()
+            gradeOptions.value = grades.map((grade: any) => ({
+                value: grade.idx,
+                label: grade.name
+            }))
+            // Set default grade to the first option
+            if (gradeOptions.value.length > 0) {
+                currentGrade.value = gradeOptions.value[0].value
+            }
+        } else {
+            const apiError = await gradeResponse.json() as ApiError
+            error.value = apiError.message
+        }
+    } catch (err: any) {
+        error.value = err.message || '데이터를 불러오는데 실패했습니다.'
+    } finally {
         isLoading.value = false
-    }, 500)
+    }
 })
 
 // Validate form
@@ -141,7 +153,7 @@ const saveMember = async () => {
 
 // Go back to members list
 const goBack = () => {
-    router.push('/member')
+    router.push('/member/search')
 }
 </script>
 
@@ -159,7 +171,7 @@ const goBack = () => {
 
         <div v-if="isLoading" class="text-center py-10">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
-            <p class="mt-2 text-gray-600">스폰서십 정보를 불러오는 중...</p>
+            <p class="mt-2 text-gray-600">데이터를 불러오는 중...</p>
         </div>
 
         <div v-else>

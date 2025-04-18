@@ -2,15 +2,19 @@ export interface Member {
     readonly id: string
     readonly name: string
     readonly gender: 'M' | 'F'
-    status: 'ACTIVE' | 'INACTIVE' | 'WITHDRAW'
+    state: 'ACTIVE' | 'DEACTIVATED'
     readonly joinDate: string
-    readonly withdrawDate?: string
+    readonly deactivatedDate?: string
     readonly childrenCount: number
-    currentGrade: string
-    readonly sponsorId?: string
-    readonly recommenderId?: string
-    position?: 'Left' | 'Right'
+    currentGrade: number
+    readonly gradeHistory: GradeHistory[]
 }
+
+export interface GradeHistory {
+    grade: number
+    readonly date: string
+}
+
 
 export interface MemberSearchParams {
     memberId?: string
