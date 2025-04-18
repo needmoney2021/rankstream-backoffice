@@ -9,7 +9,7 @@ import {Admin} from "@/types/admin/admin";
 
 const fetchStore = useFetchStore()
 
-const isFetching = computed(() => {
+const isLoading = computed(() => {
     return fetchStore.isFetching
 })
 
@@ -22,6 +22,7 @@ const searchParams = ref({
 })
 
 const columns = [
+    { key: 'idx', label: 'Idx' },
     { key: 'companyName', label: '소속사' },
     { key: 'id', label: '아이디' },
     { key: 'name', label: '이름' },
@@ -51,7 +52,7 @@ const search = async () => {
         if (!searchResponse) {
             return
         }
-        
+
         if (searchResponse.ok) {
             tableData.value = await searchResponse.json()
         } else {
@@ -67,7 +68,7 @@ const search = async () => {
 }
 
 const handleRowDoubleClick = (row: any) => {
-    router.push(`/admin/detail/${row.id}`)
+    router.push(`/admin/detail/${row.idx}`)
 }
 
 const goToRegister = () => {
@@ -102,7 +103,15 @@ onMounted(() => {
                 </div>
             </div>
             <div class="flex justify-end">
-                <button @click="search" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                <button :disabled="isLoading" @click="search" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                    <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <!-- Loading spinner -->
+                        <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                            <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"></path>
+                        </svg>
+                    </span>
                     조회
                 </button>
             </div>
@@ -118,8 +127,8 @@ onMounted(() => {
         <ResultTable
             :columns="columns"
             :data="tableData"
-            key-column="id"
-            @row-double-click="handleRowDoubleClick"
+            key-column="idx"
+            @row-dblclick="handleRowDoubleClick"
         />
     </div>
 </template>

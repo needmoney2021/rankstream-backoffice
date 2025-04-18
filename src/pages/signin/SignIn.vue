@@ -98,7 +98,7 @@ const handleLogin = async () => {
                             autocomplete="current-password"
                             class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                             name="password"
-                            placeholder="비밀번호"
+                            placeholder="비밀번호(8자 이상)"
                             required
                             type="password"
                         />
@@ -117,12 +117,9 @@ const handleLogin = async () => {
                     >
                         <span v-if="isLoading" class="absolute left-0 inset-y-0 flex items-center pl-3">
                             <!-- Loading spinner -->
-                            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                                      fill="currentColor"></path>
+                            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" fill="currentColor"></path>
                             </svg>
                         </span>
                         로그인

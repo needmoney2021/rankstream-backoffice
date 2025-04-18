@@ -1,9 +1,10 @@
 export interface Admin {
+    readonly idx: number
     readonly companyName: string
     readonly id: string
     readonly name: string
-    readonly department: string
-    readonly state: 'ACTIVE' | 'DEACTIVATED'
+    department: string
+    state: 'ACTIVE' | 'DEACTIVATED'
     readonly createdAt: string
     readonly updatedAt: string
     readonly createdBy: string
