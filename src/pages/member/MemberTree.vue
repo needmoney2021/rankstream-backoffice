@@ -238,7 +238,7 @@ const renderText = () => {
     if (!ctx) return
 
     ctx.clearRect(0, 0, textCanvas.value.width, textCanvas.value.height)
-    ctx.font = '12px Arial'
+    ctx.font = '16px Arial'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
 
