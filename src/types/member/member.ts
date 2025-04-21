@@ -17,7 +17,11 @@ export interface Member {
     sponsorIdx: number | null
     sponsorId: string | null
     sponsorName: string | null
+    recommenderIdx: number | null
+    recommenderId: string | null
+    recommenderName: string | null
     state: 'ACTIVE' | 'DEACTIVATED'
+    position?: 'LEFT' | 'RIGHT' | null
     gradeIdx: number
     gradeName: string
     gradeHistory: GradeHistory[]

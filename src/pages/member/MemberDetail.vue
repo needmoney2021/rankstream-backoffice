@@ -101,6 +101,7 @@ const saveMember = async () => {
             state.value = data.state
             gradeIdx.value = data.gradeIdx
             alert('회원 정보가 성공적으로 수정되었습니다.')
+            await router.push('/member/search')
         } else {
             const apiError = await response.json() as ApiError
             error.value = apiError.message
@@ -187,7 +188,7 @@ onMounted(() => {
 
         <div v-else class="bg-white p-6 rounded-lg shadow">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Read-only fields -->
+                <!-- Left column -->
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">회원 아이디</label>
@@ -199,6 +200,62 @@ onMounted(() => {
                         />
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700" for="state">상태</label>
+                        <select
+                            id="state"
+                            v-model="state"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        >
+                            <option v-for="option in stateOptions" :key="option.value" :value="option.value">
+                                {{ option.label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">상위 스폰서 아이디</label>
+                        <input
+                            :value="member.sponsorId || '-'"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">위치</label>
+                        <input
+                            :value="member.position || '-'"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">추천인 아이디</label>
+                        <input
+                            :value="member.recommenderId || '-'"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">가입일</label>
+                        <input
+                            :value="member.createdAt"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
+                        />
+                    </div>
+                </div>
+
+                <!-- Right column -->
+                <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">이름</label>
                         <input
@@ -220,9 +277,9 @@ onMounted(() => {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">가입일</label>
+                        <label class="block text-sm font-medium text-gray-700">상위 스폰서 이름</label>
                         <input
-                            :value="member.createdAt"
+                            :value="member.sponsorName || '-'"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                             readonly
                             type="text"
@@ -230,35 +287,9 @@ onMounted(() => {
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">하위 회원 수</label>
-                        <input
-                            :value="member.childrenCount"
-                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            readonly
-                            type="text"
-                        />
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <!-- Editable fields -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700" for="state">상태</label>
+                        <label class="block text-sm font-medium text-gray-700" for="grade">회원등급</label>
                         <select
-                            id="state"
-                            v-model="state"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        >
-                            <option v-for="option in stateOptions" :key="option.value" :value="option.value">
-                                {{ option.label }}
-                            </option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700" for="gradeIdx">현재 등급</label>
-                        <select
-                            id="gradeIdx"
+                            id="grade"
                             v-model="gradeIdx"
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         >
@@ -269,29 +300,19 @@ onMounted(() => {
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">추천인 이름</label>
+                        <input
+                            :value="member.recommenderName || '-'"
+                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            readonly
+                            type="text"
+                        />
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">수정일</label>
                         <input
                             :value="member.updatedAt"
-                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            readonly
-                            type="text"
-                        />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">상위 스폰서 아이디</label>
-                        <input
-                            :value="member.sponsorId || '-'"
-                            class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                            readonly
-                            type="text"
-                        />
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">상위 스폰서 이름</label>
-                        <input
-                            :value="member.sponsorName || '-'"
                             class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                             readonly
                             type="text"

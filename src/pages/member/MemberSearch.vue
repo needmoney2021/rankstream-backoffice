@@ -16,7 +16,7 @@ const error = ref('')
 
 // Search params
 const searchParams = ref<MemberSearchParams>({
-    memberId: '',
+    id: '',
     name: '',
     gender: ''
 })
@@ -43,7 +43,7 @@ const searchMembers = async () => {
 
         // Build query string
         const queryParams = new URLSearchParams()
-        if (searchParams.value.memberId) queryParams.append('memberId', searchParams.value.memberId)
+        if (searchParams.value.id) queryParams.append('id', searchParams.value.id)
         if (searchParams.value.name) queryParams.append('name', searchParams.value.name)
         if (searchParams.value.gender) queryParams.append('gender', searchParams.value.gender)
 
@@ -111,10 +111,10 @@ onMounted(() => {
         <div class="bg-white p-6 rounded-lg shadow mb-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700" for="memberId">회원 아이디</label>
+                    <label class="block text-sm font-medium text-gray-700" for="id">회원 아이디</label>
                     <input
-                        id="memberId"
-                        v-model="searchParams.memberId"
+                        id="id"
+                        v-model="searchParams.id"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="회원 아이디 입력"
                         type="text"

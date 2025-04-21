@@ -7,22 +7,32 @@ import { ApiError } from '@/types/error/apierror'
 import { useFetchStore } from '@/store/fetch/fetch'
 import { Grade } from '@/types/grade/grade'
 
+interface CommissionResponse {
+    commissionPlan?: 'BINARY' | 'GENERAL'
+}
+
 const router = useRouter()
 const fetchStore = useFetchStore()
 
 // Company sponsorship type
-const sponsorshipType = ref<'binary' | 'non-binary'>('binary')
+const sponsorshipType = ref<'BINARY' | 'GENERAL'>('BINARY')
 const isLoading = ref(true)
 
 // Form fields
 const memberId = ref('')
 const name = ref('')
-const gender = ref('M')
+const gender = ref('MALE')
 const joinDate = ref('')
+const joinTime = ref('00:00')
 const currentGrade = ref('')
 const recommenderId = ref('')
 const sponsorId = ref('')
-const position = ref('Left')
+const position = ref<'LEFT' | 'RIGHT'>('LEFT')
+const isFirstMember = ref(false)
+
+// Validation states
+const isRecommenderValidated = ref(false)
+const isSponsorValidated = ref(false)
 
 // UI state
 const error = ref('')
@@ -31,17 +41,41 @@ const showConfirmModal = ref(false)
 // Grade options
 const gradeOptions = ref<{value: number, label: string}[]>([])
 
-// Set today's date as default join date
+// Set today's date and time as default
 onMounted(async () => {
-    const today = new Date().toISOString().split('T')[0]
-    joinDate.value = today
+    const today = new Date()
+    joinDate.value = today.toISOString().split('T')[0]
+    joinTime.value = today.toTimeString().slice(0, 5)
 
     try {
+        // Fetch commission plan
+        const { secureRequest: commissionRequest } = useSecureFetch()
+        const commissionResponse = await commissionRequest('/companies/commission', { method: 'GET' })
+        
+        if (!commissionResponse) {
+            error.value = '서버와의 통신에 실패했습니다.'
+            return
+        }
+
+        if (commissionResponse.ok) {
+            const commissionData = await commissionResponse.json() as CommissionResponse
+            if (!commissionData.commissionPlan) {
+                error.value = '회사의 후원 방식이 설정되지 않았습니다. \'보상 플랜\' 메뉴에서 먼저 등록하세요.'
+                return
+            }
+            sponsorshipType.value = commissionData.commissionPlan
+        } else {
+            const apiError = await commissionResponse.json() as ApiError
+            error.value = apiError.message
+            return
+        }
+
         // Fetch grade options
         const { secureRequest: gradeRequest } = useSecureFetch()
         const gradeResponse = await gradeRequest('/grade', { method: 'GET' })
         
         if (!gradeResponse) {
+            error.value = '서버와의 통신에 실패했습니다.'
             return
         }
 
@@ -60,11 +94,75 @@ onMounted(async () => {
             error.value = apiError.message
         }
     } catch (err: any) {
-        error.value = err.message || '데이터를 불러오는데 실패했습니다.'
+        error.value = err.message || '필요한 데이터를 불러오는데 실패했습니다.'
     } finally {
         isLoading.value = false
     }
 })
+
+// Validate recommender
+const validateRecommender = async () => {
+    if (!recommenderId.value.trim()) {
+        error.value = '추천인 아이디를 입력해주세요.'
+        return
+    }
+
+    try {
+        const { secureRequest: validateRequest } = useSecureFetch()
+        const response = await validateRequest(`/members/recommender/${recommenderId.value}`, { method: 'GET' })
+        
+        if (!response) {
+            return
+        }
+
+        if (response.ok) {
+            const data = await response.json()
+            if (data.valid) {
+                isRecommenderValidated.value = true
+                error.value = ''
+            } else {
+                error.value = data.reason || '유효하지 않은 추천인입니다.'
+            }
+        } else {
+            const apiError = await response.json() as ApiError
+            error.value = apiError.message
+        }
+    } catch (err: any) {
+        error.value = err.message || '추천인 검증에 실패했습니다.'
+    }
+}
+
+// Validate sponsor
+const validateSponsor = async () => {
+    if (!sponsorId.value.trim()) {
+        error.value = '상위 스폰서 아이디를 입력해주세요.'
+        return
+    }
+
+    try {
+        const { secureRequest: validateRequest } = useSecureFetch()
+        const response = await validateRequest(`/members/sponsor/${sponsorId.value}?position=${position.value}`, { method: 'GET' })
+        
+        if (!response) {
+            return
+        }
+
+        if (response.ok) {
+            const data = await response.json()
+            if (data.valid) {
+                isSponsorValidated.value = true
+                error.value = ''
+            } else {
+                error.value = data.reason || '유효하지 않은 상위 스폰서입니다.'
+            }
+        } else {
+            const apiError = await response.json() as ApiError
+            error.value = apiError.message
+        }
+    } catch (err: any) {
+        error.value = err.message || '상위 스폰서 검증에 실패했습니다.'
+    }
+}
 
 // Validate form
 const validateForm = () => {
@@ -83,9 +181,21 @@ const validateForm = () => {
         return false
     }
 
-    if (!sponsorId.value.trim()) {
-        error.value = '상위 스폰서 아이디를 입력해주세요.'
-        return false
+    if (!isFirstMember.value) {
+        if (!sponsorId.value.trim()) {
+            error.value = '상위 스폰서 아이디를 입력해주세요.'
+            return false
+        }
+
+        if (!isSponsorValidated.value) {
+            error.value = '상위 스폰서 검증이 필요합니다.'
+            return false
+        }
+
+        if (recommenderId.value.trim() && !isRecommenderValidated.value) {
+            error.value = '추천인 검증이 필요합니다.'
+            return false
+        }
     }
 
     return true
@@ -112,40 +222,41 @@ const handleConfirmClose = (confirmed: boolean) => {
 // Save new member
 const saveMember = async () => {
     try {
-        // This would be an actual API call in a real implementation
-        // const response = await fetch('/api/members', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify({
-        //         id: memberId.value,
-        //         name: name.value,
-        //         gender: gender.value,
-        //         joinDate: joinDate.value,
-        //         currentGrade: currentGrade.value,
-        //         recommenderId: recommenderId.value || undefined,
-        //         sponsorId: sponsorId.value,
-        //         position: sponsorshipType.value === 'binary' ? position.value : undefined
-        //     })
-        // })
-        // if (!response.ok) throw new Error('Failed to create member')
-
-        // For mock purposes, we'll simulate a successful creation
-        console.debug('Creating member:', {
-            id: memberId.value,
-            name: name.value,
-            gender: gender.value,
-            joinDate: joinDate.value,
-            currentGrade: currentGrade.value,
-            recommenderId: recommenderId.value || undefined,
-            sponsorId: sponsorId.value,
-            position: sponsorshipType.value === 'binary' ? position.value : undefined
+        const { secureRequest } = useSecureFetch()
+        const response = await secureRequest('/members', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: memberId.value,
+                name: name.value,
+                gender: gender.value,
+                gradeIdx: currentGrade.value,
+                recommenderId: isFirstMember.value ? null : recommenderId.value || null,
+                sponsorId: isFirstMember.value ? null : sponsorId.value || null,
+                position: isFirstMember.value ? null : (sponsorshipType.value === 'BINARY' ? position.value : null),
+                joinedAt: `${joinDate.value}T${joinTime.value}:00`,
+                isGenesis: isFirstMember.value
+            })
         })
+
+        if (!response) {
+            error.value = '서버와의 통신에 실패했습니다.'
+            return
+        }
+
+        if (!response.ok) {
+            const apiError = await response.json() as ApiError
+            error.value = apiError.message
+            return
+        }
 
         // Show success message
         alert('새로운 회원이 성공적으로 등록되었습니다.')
 
         // Redirect back to members list
-        router.push('/member')
+        router.push('/member/search')
 
     } catch (err: any) {
         error.value = err.message || '회원을 등록하는데 실패했습니다.'
@@ -212,19 +323,27 @@ const goBack = () => {
                                 v-model="gender"
                                 class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                             >
-                                <option value="M">남성</option>
-                                <option value="F">여성</option>
+                                <option value="MALE">남성</option>
+                                <option value="FEMALE">여성</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700" for="joinDate">가입일</label>
-                            <input
-                                id="joinDate"
-                                v-model="joinDate"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                type="date"
-                            />
+                            <label class="block text-sm font-medium text-gray-700" for="joinDate">가입일시</label>
+                            <div class="flex gap-2">
+                                <input
+                                    id="joinDate"
+                                    v-model="joinDate"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    type="date"
+                                />
+                                <input
+                                    id="joinTime"
+                                    v-model="joinTime"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    type="time"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -243,36 +362,77 @@ const goBack = () => {
                         </div>
 
                         <div>
+                            <label class="block text-sm font-medium text-gray-700" for="isFirstMember">최초 회원 여부</label>
+                            <div class="mt-1">
+                                <input
+                                    id="isFirstMember"
+                                    v-model="isFirstMember"
+                                    type="checkbox"
+                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
                             <label class="block text-sm font-medium text-gray-700" for="recommenderId">추천인 아이디</label>
-                            <input
-                                id="recommenderId"
-                                v-model="recommenderId"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="추천인 아이디 입력"
-                                type="text"
-                            />
+                            <div class="flex gap-2">
+                                <input
+                                    id="recommenderId"
+                                    v-model="recommenderId"
+                                    :readonly="isRecommenderValidated"
+                                    :disabled="isFirstMember"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                                    placeholder="추천인 아이디 입력"
+                                    type="text"
+                                />
+                                <button
+                                    v-if="!isRecommenderValidated && !isFirstMember"
+                                    type="button"
+                                    class="mt-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    @click="validateRecommender"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700" for="sponsorId">상위 스폰서 아이디</label>
-                            <input
-                                id="sponsorId"
-                                v-model="sponsorId"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                                placeholder="상위 스폰서 아이디 입력"
-                                type="text"
-                            />
+                            <div class="flex gap-2">
+                                <input
+                                    id="sponsorId"
+                                    v-model="sponsorId"
+                                    :readonly="isSponsorValidated"
+                                    :disabled="isFirstMember"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
+                                    placeholder="상위 스폰서 아이디 입력"
+                                    type="text"
+                                />
+                                <button
+                                    v-if="!isSponsorValidated && !isFirstMember"
+                                    type="button"
+                                    class="mt-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    @click="validateSponsor"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
-                        <div v-if="sponsorshipType === 'binary'">
+                        <div v-if="sponsorshipType === 'BINARY'">
                             <label class="block text-sm font-medium text-gray-700" for="position">위치</label>
                             <select
                                 id="position"
                                 v-model="position"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                :disabled="isSponsorValidated || isFirstMember"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100"
                             >
-                                <option value="Left">Left</option>
-                                <option value="Right">Right</option>
+                                <option value="LEFT">Left</option>
+                                <option value="RIGHT">Right</option>
                             </select>
                         </div>
                     </div>
@@ -280,7 +440,8 @@ const goBack = () => {
 
                 <div class="mt-6">
                     <button
-                        class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="!!error"
                         @click="openConfirmModal"
                     >
                         저장

@@ -64,8 +64,8 @@ const handleSecondConfirmClose = (confirmed: boolean) => {
 const saveCommissionPlan = async () => {
     try {
         const { secureRequest } = useSecureFetch()
-        const response = await secureRequest('/commission/plan', {
-            method: 'PUT',
+        const response = await secureRequest('/companies/commission', {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
