@@ -1,46 +1,47 @@
 import {saveAs} from 'file-saver'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 export function useExcelGenerator() {
-    const generateExcel = (data: any[], columns: any[]) => {
-        // Create worksheet
-        const ws = XLSX.utils.json_to_sheet(
-            data.map(item => {
-                const row: Record<string, any> = {}
-                // Only include columns that are in the columns array
-                columns.forEach(col => {
-                    row[col.label] = item[col.key]
-                })
-                return row
-            })
-        )
-        
-        // Create workbook
-        const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, ws, 'Data')
-        
-        // Convert to array buffer
-        const excelBuffer = XLSX.write(wb, {bookType: 'xlsx', type: 'array'})
+    const generateExcel = async (data: any[], columns: any[]) => {
+        // Create workbook and worksheet
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet('Data')
+
+        // Add headers
+        worksheet.columns = columns.map(col => ({
+            header: col.label,
+            key: col.key,
+            width: 15
+        }))
+
+        // Add rows
+        worksheet.addRows(data)
+
+        // Generate buffer
+        const buffer = await workbook.xlsx.writeBuffer()
         
         // Create Blob and save
-        const blob = new Blob([excelBuffer], {type: 'application/octet-stream'})
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
         saveAs(blob, `export_${new Date().toISOString().split('T')[0]}.xlsx`)
     }
     
-    const generateTemplateExcel = (columns: any[]) => {
-        // Create empty worksheet with headers only
-        const ws = XLSX.utils.json_to_sheet([])
-        XLSX.utils.sheet_add_aoa(ws, [columns.map(col => col.label)])
-        
-        // Create workbook
-        const wb = XLSX.utils.book_new()
-        XLSX.utils.book_append_sheet(wb, ws, 'Template')
-        
-        // Convert to array buffer
-        const excelBuffer = XLSX.write(wb, {bookType: 'xlsx', type: 'array'})
+    const generateTemplateExcel = async (columns: any[]) => {
+        // Create workbook and worksheet
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet('Template')
+
+        // Add headers
+        worksheet.columns = columns.map(col => ({
+            header: col.label,
+            key: col.key,
+            width: 15
+        }))
+
+        // Generate buffer
+        const buffer = await workbook.xlsx.writeBuffer()
         
         // Create Blob and save
-        const blob = new Blob([excelBuffer], {type: 'application/octet-stream'})
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
         saveAs(blob, `template_${new Date().toISOString().split('T')[0]}.xlsx`)
     }
     

@@ -30,9 +30,9 @@ const handleRightClick = (event: MouseEvent) => {
     }
 }
 
-const exportToExcel = () => {
+const exportToExcel = async () => {
     if (props.data && props.columns) {
-        excelGenerator.generateExcel(props.data, props.columns)
+        await excelGenerator.generateExcel(props.data, props.columns)
     }
 }
 
