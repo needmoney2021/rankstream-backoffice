@@ -64,7 +64,7 @@ const fetchTreeData = async () => {
     try {
         const { secureRequest: getTreeRequest } = useSecureFetch()
         const response = await getTreeRequest(`/members/${memberIdx.value}/tree`, { method: 'GET' })
-        
+
         if (!response) {
             return
         }
@@ -75,7 +75,7 @@ const fetchTreeData = async () => {
 
             // Flatten the tree structure
             const flattenedNodes: FlattenedTreeData['nodes'] = []
-            
+
             const processNode = (node: TreeNode) => {
                 // Create a flattened node without children
                 const { children, ...nodeWithoutChildren } = node
@@ -158,7 +158,7 @@ const calculateNodePositions = () => {
     })
 
     // Debug node positions
-    console.log('Node positions after calculation:', 
+    console.log('Node positions after calculation:',
         treeData.value.nodes.map(n => ({
             idx: n.idx,
             id: n.id,
@@ -200,13 +200,21 @@ const handleWheel = (event: WheelEvent) => {
     viewport.value.scale *= zoomFactor
 
     // Update visible depth based on zoom level
-    if (viewport.value.scale < 0.5) {
-        visibleDepth.value = 2
-    } else if (viewport.value.scale < 0.3) {
-        visibleDepth.value = 1
-    } else {
+    // if (viewport.value.scale < 0.5) {
+    //     visibleDepth.value = 2
+    // } else if (viewport.value.scale < 0.3) {
+    //     visibleDepth.value = 1
+    // } else {
+    //     visibleDepth.value = 3
+    // }
+    if (viewport.value.scale > 0.5) {
         visibleDepth.value = 3
+    } else if (viewport.value.scale > 0.3) {
+        visibleDepth.value = 2
+    } else {
+        visibleDepth.value = 1
     }
+
 
     render()
 }
@@ -283,16 +291,16 @@ const render = () => {
 
     // Filter nodes based on visible depth
     const visibleNodes = treeData.value.nodes.filter(node => node.depth <= visibleDepth.value)
-    
+
     // Create node map for quick lookup
     const nodeMap = new Map(visibleNodes.map(node => [node.idx, node]))
-    
+
     // Filter links to only include those where both source and target nodes are visible
     const visibleLinks = treeData.value.links.filter(link => {
         const sourceNode = nodeMap.get(link.source)
         const targetNode = nodeMap.get(link.target)
-        return sourceNode && targetNode && 
-               sourceNode.depth <= visibleDepth.value && 
+        return sourceNode && targetNode &&
+               sourceNode.depth <= visibleDepth.value &&
                targetNode.depth <= visibleDepth.value
     })
 
@@ -379,7 +387,7 @@ const renderMinimap = () => {
     treeData.value.links.forEach(link => {
         const source = treeData.value!.nodes.find(n => n.idx === link.source)
         const target = treeData.value!.nodes.find(n => n.idx === link.target)
-        
+
         if (source && target) {
             const sourceX = (source.x - bounds.minX - treeWidth / 2) * minimapScale + centerX
             const sourceY = (source.y - bounds.minY - treeHeight / 2) * minimapScale + centerY
@@ -396,7 +404,7 @@ const renderMinimap = () => {
     // Calculate viewport rectangle in minimap coordinates
     const viewportWidth = windowSize.value.width / viewport.value.scale
     const viewportHeight = windowSize.value.height / viewport.value.scale
-    
+
     const viewportX = (-viewport.value.x / viewport.value.scale - viewportWidth / 2) * minimapScale + centerX
     const viewportY = (-viewport.value.y / viewport.value.scale - viewportHeight / 2) * minimapScale + centerY
     const rectWidth = viewportWidth * minimapScale
@@ -415,8 +423,8 @@ const handleSearch = () => {
     }
 
     const query = searchQuery.value.toLowerCase().trim()
-    const foundNode = treeData.value.nodes.find(node => 
-        node.id.toLowerCase().includes(query) || 
+    const foundNode = treeData.value.nodes.find(node =>
+        node.id.toLowerCase().includes(query) ||
         node.name.toLowerCase().includes(query)
     )
 
@@ -468,7 +476,7 @@ watch(windowSize, () => {
     <div class="relative w-full h-screen">
         <!-- 상단 컨트롤 바 -->
         <div class="absolute top-0 left-0 right-0 bg-white shadow-md p-4 z-10 flex items-center gap-4">
-            <button 
+            <button
                 @click="handleBack"
                 class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 flex items-center gap-2"
             >
@@ -498,8 +506,8 @@ watch(windowSize, () => {
         </div>
 
         <!-- 로딩 및 에러 상태 -->
-        <div 
-            v-if="fetchStore.isFetching" 
+        <div
+            v-if="fetchStore.isFetching"
             class="absolute inset-0 flex items-center justify-center"
             style="top: 72px;"
         >
@@ -507,8 +515,8 @@ watch(windowSize, () => {
             <p class="ml-2 text-gray-600">데이터를 불러오는 중...</p>
         </div>
 
-        <div 
-            v-else-if="error" 
+        <div
+            v-else-if="error"
             class="absolute inset-0 flex items-center justify-center"
             style="top: 72px;"
         >
@@ -565,4 +573,4 @@ canvas {
 .h-screen {
     height: 100vh;
 }
-</style> 
+</style>
