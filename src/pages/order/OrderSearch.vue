@@ -2,10 +2,12 @@
 import {onMounted, ref} from 'vue'
 import {useSearchStore} from '@/store/search/search'
 import ResultTable from '@/components/table/ResultTable.vue'
-import {Order} from '@/types/order/order'
+import {Transaction} from '@/types/transaction/transaction'
+import { useSecureFetch } from '@/composable/fetch/use-secure-fetch'
+import { ApiError } from '@/types/error/apierror'
 
 const searchStore = useSearchStore()
-const orders = ref<Order[]>([])
+const transactions = ref<Transaction[]>([])
 const isLoading = ref(false)
 const error = ref('')
 
@@ -13,26 +15,27 @@ const error = ref('')
 const searchParams = ref({
     memberId: '',
     orderId: '',
-    orderDateFrom: '',
-    orderDateTo: ''
+    orderedFrom: '',
+    orderedTo: ''
 })
 
 // Define table columns
 const columns = [
-    {key: 'memberId', label: '회원 아이디', width: '120px'},
+    {key: 'idx', label: '주문 키', width: '100px'},
+    {key: 'memberIdx', label: '회원 키', width: '100px'},
     {key: 'memberName', label: '회원 이름', width: '120px'},
-    {key: 'orderId', label: '주문 아이디', width: '120px'},
-    {key: 'orderDate', label: '주문일시', width: '150px'},
-    {key: 'cancelDate', label: '취소일시', width: '150px'},
-    {key: 'amount', label: '주문금액', width: '100px'},
-    {key: 'gradePoint', label: '등급 포인트', width: '100px'},
+    {key: 'transactionId', label: '거래 아이디', width: '120px'},
+    {key: 'amount', label: '주문금액', width: '120px'},
+    {key: 'gradePoint', label: '등급 포인트', width: '120px'},
     {key: 'businessPoint', label: '비즈니스 포인트', width: '120px'},
-    {key: 'status', label: '상태', width: '80px'},
-    {key: 'isClosed', label: '마감 여부', width: '80px'}
+    {key: 'valueAddedTax', label: '부가세', width: '100px'},
+    {key: 'orderedAt', label: '주문일시', width: '150px'},
+    {key: 'createdAt', label: '등록일시', width: '150px'},
+    {key: 'updatedAt', label: '수정일시', width: '150px'}
 ]
 
-// Method to search orders
-const searchOrders = async () => {
+// Method to search transactions
+const searchTransactions = async () => {
     try {
         isLoading.value = true
         error.value = ''
@@ -40,102 +43,30 @@ const searchOrders = async () => {
         // Save search params to store
         searchStore.saveSearchParams('orderSearch', searchParams.value)
 
-        // This would be an actual API call in a real implementation
-        // const queryParams = new URLSearchParams()
-        // if (searchParams.value.memberId) queryParams.append('memberId', searchParams.value.memberId)
-        // if (searchParams.value.orderId) queryParams.append('orderId', searchParams.value.orderId)
-        // if (searchParams.value.orderDateFrom) queryParams.append('orderDateFrom', searchParams.value.orderDateFrom)
-        // if (searchParams.value.orderDateTo) queryParams.append('orderDateTo', searchParams.value.orderDateTo)
-        //
-        // const response = await fetch(`/api/orders?${queryParams}`)
-        // if (!response.ok) throw new Error('Failed to fetch orders')
-        // orders.value = await response.json()
+        // Build query parameters
+        const queryParams = new URLSearchParams()
+        if (searchParams.value.memberId) queryParams.append('member-id', searchParams.value.memberId)
+        if (searchParams.value.orderId) queryParams.append('order-id', searchParams.value.orderId)
+        if (searchParams.value.orderedFrom) queryParams.append('ordered-from', searchParams.value.orderedFrom)
+        if (searchParams.value.orderedTo) queryParams.append('ordered-to', searchParams.value.orderedTo)
 
-        // For now, generate mock data based on search params
-        setTimeout(() => {
-            // Simple mock filtering based on search params
-            const mockOrders: Order[] = [
-                {
-                    orderId: 'ORD001',
-                    memberId: 'member001',
-                    memberName: '김철수',
-                    orderDate: '2023-06-10T14:30:00Z',
-                    amount: 150000,
-                    gradePoint: 150,
-                    businessPoint: 75,
-                    status: 'COMPLETED',
-                    isClosed: true
-                },
-                {
-                    orderId: 'ORD002',
-                    memberId: 'member002',
-                    memberName: '이영희',
-                    orderDate: '2023-06-15T10:15:00Z',
-                    amount: 210000,
-                    gradePoint: 210,
-                    businessPoint: 105,
-                    status: 'COMPLETED',
-                    isClosed: true
-                },
-                {
-                    orderId: 'ORD003',
-                    memberId: 'member003',
-                    memberName: '박지민',
-                    orderDate: '2023-06-20T16:45:00Z',
-                    cancelDate: '2023-06-21T09:30:00Z',
-                    amount: 85000,
-                    gradePoint: 85,
-                    businessPoint: 42.5,
-                    status: 'CANCELLED',
-                    isClosed: false
-                },
-                {
-                    orderId: 'ORD004',
-                    memberId: 'member001',
-                    memberName: '김철수',
-                    orderDate: '2023-07-05T11:20:00Z',
-                    amount: 320000,
-                    gradePoint: 320,
-                    businessPoint: 160,
-                    status: 'COMPLETED',
-                    isClosed: true
-                },
-                {
-                    orderId: 'ORD005',
-                    memberId: 'member004',
-                    memberName: '최유나',
-                    orderDate: '2023-07-10T13:10:00Z',
-                    amount: 175000,
-                    gradePoint: 175,
-                    businessPoint: 87.5,
-                    status: 'COMPLETED',
-                    isClosed: false
-                }
-            ]
+        const { secureRequest: searchRequest } = useSecureFetch()
+        const searchResponse = await searchRequest(`/transactions?${queryParams}`, { method: 'GET' })
 
-            // Filter based on search params
-            orders.value = mockOrders.filter(order => {
-                const matchesMemberId = !searchParams.value.memberId ||
-                    order.memberId.toLowerCase().includes(searchParams.value.memberId.toLowerCase())
+        if (!searchResponse) {
+            return
+        }
 
-                const matchesOrderId = !searchParams.value.orderId ||
-                    order.orderId.toLowerCase().includes(searchParams.value.orderId.toLowerCase())
-
-                const orderDate = new Date(order.orderDate)
-                const matchesFromDate = !searchParams.value.orderDateFrom ||
-                    orderDate >= new Date(searchParams.value.orderDateFrom)
-
-                const matchesToDate = !searchParams.value.orderDateTo ||
-                    orderDate <= new Date(searchParams.value.orderDateTo + 'T23:59:59')
-
-                return matchesMemberId && matchesOrderId && matchesFromDate && matchesToDate
-            })
-
-            isLoading.value = false
-        }, 500)
-
+        if (searchResponse.ok) {
+            transactions.value = await searchResponse.json()
+        } else {
+            const apiError = await searchResponse.json() as ApiError
+            error.value = apiError.message
+        }
     } catch (err: any) {
         error.value = err.message || '주문 정보를 검색하는데 실패했습니다.'
+        console.error('Error searching transactions:', err)
+    } finally {
         isLoading.value = false
     }
 }
@@ -145,17 +76,9 @@ const formatCurrency = (value: number) => {
     return value.toLocaleString() + '원'
 }
 
-const formatStatus = (status: string) => {
-    return status === 'COMPLETED' ? '완료' : '취소'
-}
-
-const formatClosed = (isClosed: boolean) => {
-    return isClosed ? 'Y' : 'N'
-}
-
 // Handle clearing table data
 const clearTableData = () => {
-    orders.value = []
+    transactions.value = []
 }
 
 // Set today's date as default order date range (last month)
@@ -164,14 +87,14 @@ onMounted(() => {
     const oneMonthAgo = new Date()
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
 
-    searchParams.value.orderDateTo = today.toISOString().split('T')[0]
-    searchParams.value.orderDateFrom = oneMonthAgo.toISOString().split('T')[0]
+    searchParams.value.orderedTo = today.toISOString().split('T')[0]
+    searchParams.value.orderedFrom = oneMonthAgo.toISOString().split('T')[0]
 
     // Load search params from store
     const cachedParams = searchStore.getSearchParams('orderSearch')
     if (Object.keys(cachedParams).length > 0) {
         searchParams.value = {...cachedParams}
-        searchOrders() // Search with cached params
+        searchTransactions() // Search with cached params
     }
 })
 </script>
@@ -208,20 +131,20 @@ onMounted(() => {
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700" for="orderDateFrom">주문일 (시작)</label>
+                    <label class="block text-sm font-medium text-gray-700" for="orderedFrom">주문일 (시작)</label>
                     <input
-                        id="orderDateFrom"
-                        v-model="searchParams.orderDateFrom"
+                        id="orderedFrom"
+                        v-model="searchParams.orderedFrom"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         type="date"
                     />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700" for="orderDateTo">주문일 (종료)</label>
+                    <label class="block text-sm font-medium text-gray-700" for="orderedTo">주문일 (종료)</label>
                     <input
-                        id="orderDateTo"
-                        v-model="searchParams.orderDateTo"
+                        id="orderedTo"
+                        v-model="searchParams.orderedTo"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         type="date"
                     />
@@ -231,7 +154,7 @@ onMounted(() => {
             <div class="mt-4 flex justify-end">
                 <button
                     class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    @click="searchOrders"
+                    @click="searchTransactions"
                 >
                     조회
                 </button>
@@ -246,21 +169,20 @@ onMounted(() => {
 
         <div v-else-if="error" class="bg-red-100 p-4 rounded text-red-700 mb-4">
             {{ error }}
-            <button class="ml-2 underline" @click="searchOrders">다시 시도</button>
+            <button class="ml-2 underline" @click="searchTransactions">다시 시도</button>
         </div>
 
-        <div v-else-if="orders.length > 0">
+        <div v-else-if="transactions.length > 0">
             <ResultTable
                 :columns="columns"
-                :data="orders.map(order => ({
-                    ...order,
-                    amount: formatCurrency(order.amount),
-                    orderDate: new Date(order.orderDate).toLocaleString(),
-                    cancelDate: order.cancelDate ? new Date(order.cancelDate).toLocaleString() : '-',
-                    status: formatStatus(order.status),
-                    isClosed: formatClosed(order.isClosed)
+                :data="transactions.map(transaction => ({
+                    ...transaction,
+                    amount: formatCurrency(transaction.amount),
+                    orderedAt: new Date(transaction.orderedAt).toLocaleString(),
+                    createdAt: new Date(transaction.createdAt).toLocaleString(),
+                    updatedAt: new Date(transaction.updatedAt).toLocaleString()
                 }))"
-                keyColumn="orderId"
+                keyColumn="idx"
                 @clear-table-data="clearTableData"
             />
         </div>
