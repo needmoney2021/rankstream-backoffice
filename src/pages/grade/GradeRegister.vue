@@ -11,6 +11,7 @@ const fetchStore = useFetchStore()
 
 // Form fields
 const name = ref('')
+const code = ref('')
 const achievementPoint = ref(0)
 const refundRate = ref(0)
 
@@ -22,6 +23,11 @@ const showConfirmModal = ref(false)
 const validateForm = () => {
     if (!name.value.trim()) {
         error.value = '등급 이름을 입력해주세요.'
+        return false
+    }
+
+    if (!code.value.trim()) {
+        error.value = '등급 코드를 입력해주세요.'
         return false
     }
 
@@ -67,6 +73,7 @@ const saveGrade = async () => {
             },
             body: JSON.stringify({
                 name: name.value,
+                code: code.value,
                 achievementPoint: achievementPoint.value,
                 refundRate: refundRate.value
             })
@@ -121,6 +128,17 @@ const goBack = () => {
                         v-model="name"
                         class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="예: 골드"
+                        type="text"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700" for="code">등급 코드</label>
+                    <input
+                        id="code"
+                        v-model="code"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="예: GOLD"
                         type="text"
                     />
                 </div>

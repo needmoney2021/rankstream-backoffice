@@ -15,6 +15,7 @@ const error = ref('')
 const columns = [
     {key: 'idx', label: '등급 키', width: '100px'},
     {key: 'name', label: '등급 이름', width: '150px'},
+    {key: 'code', label: '등급 코드', width: '120px'},
     {key: 'achievementPoint', label: '등급 달성 포인트', width: '150px'},
     {key: 'refundRate', label: '환급률', width: '100px'},
     {key: 'createdBy', label: '등록자', width: '120px'},
