@@ -66,8 +66,7 @@ export function useSecureFetch() {
             }
             
             authStore.setAuth({
-                userId: data.userId,
-                companyIdx: data.companyIdx,
+                ...data,
                 accessToken: data.accessToken,
             })
             return data.accessToken
