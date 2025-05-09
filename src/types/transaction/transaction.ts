@@ -11,3 +11,14 @@ export interface Transaction {
     readonly createdAt: string
     readonly updatedAt: string
 }
+
+export interface ClosedTransaction {
+    readonly year: number
+    readonly month: number
+    readonly totalAmount: number
+    readonly totalValueAddedTax: number
+    readonly totalGradePoint: number
+    readonly totalBusinessPoint: number
+    readonly memberIdx: number
+    readonly memberName: string
+}
